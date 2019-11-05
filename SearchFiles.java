@@ -101,8 +101,8 @@ public class SearchFiles {
       in = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
     }
     QueryParser parser = new QueryParser(field, analyzer);
-    //while (true) {
-      /*if (queries == null && queryString == null) {                        // prompt the user
+    while (true) {
+      if (queries == null && queryString == null) {                        // prompt the user
         System.out.println("Enter query: ");
       }
 
@@ -116,47 +116,53 @@ public class SearchFiles {
       if (line.length() == 0) {
         break;
       }
-      
-      Query query = parser.parse(line);
-      System.out.println("Searching for: " + query.toString(field));
-            
-      if (repeat > 0) {                           // repeat & time as benchmark
-        Date start = new Date();
-        for (int i = 0; i < repeat; i++) {
-          searcher.search(query, 100);
+      String[] composition = line.split(";");
+      for(int i = 0; i<composition.length; i++){
+        String[] str = composition[i].split(":");
+        int res = str[0].compareTo("spatial");
+        if(res == 0){
+          String[] split = str[1].split(",");
+          //PARA PROBAR LAS ESPACIALES//
+          Double west = Double.parseDouble(split[0]);  //-135.0;
+          Double east = Double.parseDouble(split[1]);  //-110.0;
+          Double south = Double.parseDouble(split[2]); //50.0;
+          Double north = Double.parseDouble(split[3]); //72.0;
+
+          //Xmin <= east
+          Query westRangeQuery = DoublePoint.newRangeQuery("west" , Double.NEGATIVE_INFINITY, east);
+          //Xmax >= west
+          Query eastRangeQuery = DoublePoint.newRangeQuery("east", west , Double.POSITIVE_INFINITY);
+          //Ymin <= north
+          Query southRangeQuery = DoublePoint.newRangeQuery("south", Double.NEGATIVE_INFINITY, north);
+          //Ymax >= south
+          Query northRangeQuery = DoublePoint.newRangeQuery("north", south, Double.POSITIVE_INFINITY);
+
+          BooleanQuery queryy = new BooleanQuery.Builder()
+                  .add(westRangeQuery, BooleanClause.Occur.MUST)
+                  .add(eastRangeQuery, BooleanClause.Occur.MUST)
+                  .add(southRangeQuery, BooleanClause.Occur.MUST)
+                  .add(northRangeQuery, BooleanClause.Occur.MUST).build();
+
+          doPagingSearch(in, searcher, queryy, hitsPerPage, raw, queries == null && queryString == null);
+        } else{
+          Query query = parser.parse(composition[i]);
+          System.out.println("Searching for: " + query.toString(field));
+          doPagingSearch(in, searcher, query, hitsPerPage, raw, queries == null && queryString == null);
+          if (repeat > 0) {                           // repeat & time as benchmark
+            Date start = new Date();
+            for (int j = 0; j < repeat; j++) {
+              searcher.search(query, 100);
+            }
+            Date end = new Date();
+            System.out.println("Time: "+(end.getTime()-start.getTime())+"ms");
+          }
         }
-        Date end = new Date();
-        System.out.println("Time: "+(end.getTime()-start.getTime())+"ms");
-      }*/
-      
-      //PARA PROBAR LAS ESPACIALES//
-      Double east = -110.0;
-      Double west = -135.0;
-      Double north = 72.0;
-      Double south = 50.0;
-      
-      //Xmin <= east
-      Query westRangeQuery = DoublePoint.newRangeQuery("west" , Double.NEGATIVE_INFINITY, east);
-      //Xmax >= west
-      Query eastRangeQuery = DoublePoint.newRangeQuery("east", west , Double.POSITIVE_INFINITY);
-      //Ymin <= north
-      Query southRangeQuery = DoublePoint.newRangeQuery("south", Double.NEGATIVE_INFINITY, north);
-      //Ymax >= south
-      Query northRangeQuery = DoublePoint.newRangeQuery("north", south, Double.POSITIVE_INFINITY);
-      
-      BooleanQuery queryy = new BooleanQuery.Builder()
-    		  .add(westRangeQuery, BooleanClause.Occur.MUST)
-    		  .add(eastRangeQuery, BooleanClause.Occur.MUST)
-    		  .add(southRangeQuery, BooleanClause.Occur.MUST)
-    		  .add(northRangeQuery, BooleanClause.Occur.MUST).build();
-      
-      doPagingSearch(in, searcher, queryy, hitsPerPage, raw, queries == null && queryString == null);
-      
+      }
 
       if (queryString != null) {
-        //break;
+        break;
       }
-    //}
+    }
     reader.close();
   }
 
