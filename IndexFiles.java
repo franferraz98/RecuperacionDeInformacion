@@ -167,8 +167,8 @@ public class IndexFiles {
 			  break;
 		  case("DoublePoint"):
 			  if(campo.equals("LowerCorner")) {
-				  	/*DoublePoint west = null;
-				  	DoublePoint south = null;
+				  	DoublePoint west = null;	//Xmin
+				  	DoublePoint south = null;	//Ymin
 				  	
 				  	String[] s = list.item(0).getTextContent().split(" ");
 				  	Double[] d = { Double.parseDouble(s[0]), Double.parseDouble(s[1])};
@@ -176,9 +176,9 @@ public class IndexFiles {
 				  	west = new DoublePoint("west", d[0]);
 				  	doc.add(west);
 				  	south = new DoublePoint("south", d[1]);
-				  	doc.add(south);*/
+				  	doc.add(south);
 				  
-				  	StringField west = null;
+				  	/*StringField west = null;
 				  	StringField south = null;
 				  	
 				  	String[] s = list.item(0).getTextContent().split(" ");
@@ -186,18 +186,19 @@ public class IndexFiles {
 				  	west = new StringField("west", s[0], Field.Store.YES);
 				  	doc.add(west);
 				  	south = new StringField("south", s[1], Field.Store.YES);
-				  	doc.add(south);
+				  	doc.add(south);*/
 				  	
 			  }
 			  else if(campo.equals("UpperCorner")){
-				    StringField east = null;
-				  	StringField north = null;
+				  	DoublePoint east = null;	//Xmax
+				  	DoublePoint north = null;	//Ymax
 				  	
 				  	String[] s = list.item(0).getTextContent().split(" ");
+				  	Double[] d = { Double.parseDouble(s[0]), Double.parseDouble(s[1])};
 				  	
-				  	east = new StringField("east", s[0], Field.Store.YES);
+				  	east = new DoublePoint("east", d[0]);
 				  	doc.add(east);
-				  	north = new StringField("north", s[1], Field.Store.YES);
+				  	north = new DoublePoint("north", d[1]);
 				  	doc.add(north);
 			  }
 			  

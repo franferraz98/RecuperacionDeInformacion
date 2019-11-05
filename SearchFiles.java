@@ -28,11 +28,14 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.es.SpanishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
@@ -98,8 +101,8 @@ public class SearchFiles {
       in = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
     }
     QueryParser parser = new QueryParser(field, analyzer);
-    while (true) {
-      if (queries == null && queryString == null) {                        // prompt the user
+    //while (true) {
+      /*if (queries == null && queryString == null) {                        // prompt the user
         System.out.println("Enter query: ");
       }
 
@@ -124,14 +127,36 @@ public class SearchFiles {
         }
         Date end = new Date();
         System.out.println("Time: "+(end.getTime()-start.getTime())+"ms");
-      }
-
-      doPagingSearch(in, searcher, query, hitsPerPage, raw, queries == null && queryString == null);
+      }*/
+      
+      //PARA PROBAR LAS ESPACIALES//
+      Double east = -110.0;
+      Double west = -135.0;
+      Double north = 72.0;
+      Double south = 50.0;
+      
+      //Xmin <= east
+      Query westRangeQuery = DoublePoint.newRangeQuery("west" , Double.NEGATIVE_INFINITY, east);
+      //Xmax >= west
+      Query eastRangeQuery = DoublePoint.newRangeQuery("east", west , Double.POSITIVE_INFINITY);
+      //Ymin <= north
+      Query southRangeQuery = DoublePoint.newRangeQuery("south", Double.NEGATIVE_INFINITY, north);
+      //Ymax >= south
+      Query northRangeQuery = DoublePoint.newRangeQuery("north", south, Double.POSITIVE_INFINITY);
+      
+      BooleanQuery queryy = new BooleanQuery.Builder()
+    		  .add(westRangeQuery, BooleanClause.Occur.MUST)
+    		  .add(eastRangeQuery, BooleanClause.Occur.MUST)
+    		  .add(southRangeQuery, BooleanClause.Occur.MUST)
+    		  .add(northRangeQuery, BooleanClause.Occur.MUST).build();
+      
+      doPagingSearch(in, searcher, queryy, hitsPerPage, raw, queries == null && queryString == null);
+      
 
       if (queryString != null) {
-        break;
+        //break;
       }
-    }
+    //}
     reader.close();
   }
 
@@ -178,8 +203,9 @@ public class SearchFiles {
           System.out.println("doc="+hits[i].doc+" score="+hits[i].score);
           continue;
         }
-
+        
         Document doc = searcher.doc(hits[i].doc);
+        
         String path = doc.get("path");
         String modified = doc.get("modified");
         if (path != null) {
