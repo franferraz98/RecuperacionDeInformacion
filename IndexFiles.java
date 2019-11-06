@@ -145,6 +145,9 @@ public class IndexFiles {
 	  if(campo.equals("LowerCorner") || campo.equals("UpperCorner")) {
 		  list = document.getElementsByTagName("ows:"+campo);
 	  }
+	  else if(campo.equals("issued") || campo.equals("created") || campo.equals("temporal")) {
+		  list = document.getElementsByTagName("dcterms:"+campo);
+	  }
 	  else {
 		  list = document.getElementsByTagName("dc:"+campo);
 	  }
@@ -159,11 +162,36 @@ public class IndexFiles {
 			  }
 			  break;
 		  case("StringField"):
-			  StringField infoS = null;
-			  for(int i=0; i<list.getLength(); i++) {
-					 infoS = new StringField(campo, list.item(i).getTextContent(), Field.Store.YES);
-					 doc.add(infoS);
+			  if(campo.equals("issued") || campo.equals("created")) {
+				  StringField infoFecha = new StringField(campo, (list.item(0).getTextContent()).replace("-", ""), Field.Store.YES);
+				  if(!infoFecha.stringValue().equals("")) {
+					  doc.add(infoFecha);
+				  }
 			  }
+			  else if(campo.equals("temporal")) {
+				  System.out.println(list.item(0).getTextContent());
+				  String[] elementos = list.item(0).getTextContent().split(";");
+				  String aux = elementos[0].substring(elementos[0].indexOf("=")+1).replace("-", "");
+				  if(!aux.equals("None")) {
+					  DoublePoint begin = new DoublePoint("begin", 
+					  			Double.parseDouble(aux)); 
+					  doc.add(begin);
+				  }			 
+				  
+				  if(elementos.length > 1) {
+					  DoublePoint end = new DoublePoint("end", 
+							  		Double.parseDouble(elementos[1].substring(elementos[1].indexOf("=")+1).replace("-", "")));
+					  doc.add(end);
+				  }
+			  }
+			  else {
+				  StringField infoS = null;
+				  for(int i=0; i<list.getLength(); i++) {
+						 infoS = new StringField(campo, list.item(i).getTextContent(), Field.Store.YES);
+						 doc.add(infoS);
+				  }
+			  }
+			  
 			  break;
 		  case("DoublePoint"):
 			  if(campo.equals("LowerCorner")) {
@@ -307,6 +335,9 @@ public class IndexFiles {
           introducirCampo(document, "language", "StringField", doc);
           introducirCampo(document, "LowerCorner", "DoublePoint", doc);
           introducirCampo(document, "UpperCorner", "DoublePoint", doc);
+          introducirCampo(document, "issued", "StringField", doc);
+          introducirCampo(document, "created", "StringField", doc);
+          introducirCampo(document, "temporal", "StringField", doc);
 
           if (writer.getConfig().getOpenMode() == OpenMode.CREATE) {
             // New index, so we just add the document (no old document can be there):

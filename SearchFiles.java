@@ -154,6 +154,8 @@ public class SearchFiles {
         		  .add(southRangeQuery, BooleanClause.Occur.MUST)
         		  .add(northRangeQuery, BooleanClause.Occur.MUST).build();
           
+          System.out.println("Searching for: " + query.toString(field));
+          
           doPagingSearch(in, searcher, query, hitsPerPage, raw, queries == null && queryString == null);
       }
       else if(primeraConsulta.equals("spatial") && line.indexOf(" ")!=-1) {	//Consulta combinada
@@ -190,6 +192,38 @@ public class SearchFiles {
           
           doPagingSearch(in, searcher, queryFinal, hitsPerPage, raw, queries == null && queryString == null);
     	  
+      }
+      else if(primeraConsulta.equals("temporal")) {
+    	  String fechaInicio = line.substring(line.indexOf("[")+1, line.indexOf(" "));
+    	  if(fechaInicio.length()<8){
+    		  for(int i=fechaInicio.length(); i<8; i++) {
+    			  fechaInicio+="0";
+    		  }
+    	  }
+
+    	  String aux = line.substring(line.indexOf(":")).toLowerCase(); 
+    	  String fechaFinal = aux.substring(aux.indexOf("o")+2, aux.indexOf("]"));
+    	  if(fechaFinal.length()<8){
+    		  for(int i=fechaFinal.length(); i<8; i++) {
+    			  fechaFinal+="0";
+    		  }
+    	  }
+    	  
+    	  Double inicio = Double.parseDouble(fechaInicio);
+    	  Double fin = Double.parseDouble(fechaFinal);
+    	  
+    	  //begin <= fecha fin
+          Query beginRangeQuery = DoublePoint.newRangeQuery("begin" , Double.NEGATIVE_INFINITY, fin);
+          //end >= fecha inicio
+          Query finRangeQuery = DoublePoint.newRangeQuery("end", inicio , Double.POSITIVE_INFINITY);
+          
+          BooleanQuery query = new BooleanQuery.Builder()
+        		  .add(beginRangeQuery, BooleanClause.Occur.MUST)
+        		  .add(finRangeQuery, BooleanClause.Occur.MUST).build();
+          
+          System.out.println("Searching for: " + query.toString(field));
+          
+          doPagingSearch(in, searcher, query, hitsPerPage, raw, queries == null && queryString == null);
       }
       else {	//No espacial
     	  Query query = parser.parse(line);
