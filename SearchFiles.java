@@ -116,18 +116,29 @@ public class SearchFiles {
       if (line.length() == 0) {
         break;
       }
-      String[] composition = line.split(";");
-      for(int i = 0; i<composition.length; i++){
-        String[] str = composition[i].split(":");
-        int res = str[0].compareTo("spatial");
-        if(res == 0){
-          String[] split = str[1].split(",");
-          //PARA PROBAR LAS ESPACIALES//
-          Double west = Double.parseDouble(split[0]);  //-135.0;
-          Double east = Double.parseDouble(split[1]);  //-110.0;
-          Double south = Double.parseDouble(split[2]); //50.0;
-          Double north = Double.parseDouble(split[3]); //72.0;
-
+    	   	  
+	  /*Query query = parser.parse(line);
+      System.out.println("Searching for: " + query.toString(field));
+            
+      if (repeat > 0) {                           // repeat & time as benchmark
+        Date start = new Date();
+        for (int i = 0; i < repeat; i++) {
+          searcher.search(query, 100);
+        }
+        Date end = new Date();
+        System.out.println("Time: "+(end.getTime()-start.getTime())+"ms");
+      }*/
+      
+      String primeraConsulta = line.substring(0,line.indexOf(":"));
+      
+      if(primeraConsulta.equals("spatial") && line.indexOf(" ")==-1) { //Consulta únicamente espacial
+    	  String[] coordenadas = (line.substring(line.indexOf(":")+1)).split(",");
+    	  
+    	  Double east = Double.parseDouble(coordenadas[1]);
+          Double west = Double.parseDouble(coordenadas[0]);
+          Double north = Double.parseDouble(coordenadas[3]);
+          Double south = Double.parseDouble(coordenadas[2]);
+          
           //Xmin <= east
           Query westRangeQuery = DoublePoint.newRangeQuery("west" , Double.NEGATIVE_INFINITY, east);
           //Xmax >= west
@@ -136,27 +147,64 @@ public class SearchFiles {
           Query southRangeQuery = DoublePoint.newRangeQuery("south", Double.NEGATIVE_INFINITY, north);
           //Ymax >= south
           Query northRangeQuery = DoublePoint.newRangeQuery("north", south, Double.POSITIVE_INFINITY);
-
-          BooleanQuery queryy = new BooleanQuery.Builder()
-                  .add(westRangeQuery, BooleanClause.Occur.MUST)
-                  .add(eastRangeQuery, BooleanClause.Occur.MUST)
-                  .add(southRangeQuery, BooleanClause.Occur.MUST)
-                  .add(northRangeQuery, BooleanClause.Occur.MUST).build();
-
-          doPagingSearch(in, searcher, queryy, hitsPerPage, raw, queries == null && queryString == null);
-        } else{
-          Query query = parser.parse(composition[i]);
-          System.out.println("Searching for: " + query.toString(field));
+          
+          BooleanQuery query = new BooleanQuery.Builder()
+        		  .add(westRangeQuery, BooleanClause.Occur.MUST)
+        		  .add(eastRangeQuery, BooleanClause.Occur.MUST)
+        		  .add(southRangeQuery, BooleanClause.Occur.MUST)
+        		  .add(northRangeQuery, BooleanClause.Occur.MUST).build();
+          
           doPagingSearch(in, searcher, query, hitsPerPage, raw, queries == null && queryString == null);
+      }
+      else if(primeraConsulta.equals("spatial") && line.indexOf(" ")!=-1) {	//Consulta combinada
+    	  String[] coordenadas = (line.substring(line.indexOf(":")+1, line.indexOf(" "))).split(",");
+    	  
+    	  Double east = Double.parseDouble(coordenadas[1]);
+          Double west = Double.parseDouble(coordenadas[0]);
+          Double north = Double.parseDouble(coordenadas[3]);
+          Double south = Double.parseDouble(coordenadas[2]);
+          
+          //Xmin <= east
+          Query westRangeQuery = DoublePoint.newRangeQuery("west" , Double.NEGATIVE_INFINITY, east);
+          //Xmax >= west
+          Query eastRangeQuery = DoublePoint.newRangeQuery("east", west , Double.POSITIVE_INFINITY);
+          //Ymin <= north
+          Query southRangeQuery = DoublePoint.newRangeQuery("south", Double.NEGATIVE_INFINITY, north);
+          //Ymax >= south
+          Query northRangeQuery = DoublePoint.newRangeQuery("north", south, Double.POSITIVE_INFINITY);
+          
+          BooleanQuery query1 = new BooleanQuery.Builder()
+        		  .add(westRangeQuery, BooleanClause.Occur.MUST)
+        		  .add(eastRangeQuery, BooleanClause.Occur.MUST)
+        		  .add(southRangeQuery, BooleanClause.Occur.MUST)
+        		  .add(northRangeQuery, BooleanClause.Occur.MUST).build();
+    	  
+    	  String resto = line.substring(line.indexOf(" ")+1);   	  
+    	  Query query2 = parser.parse(resto);
+    	  
+    	  BooleanQuery queryFinal = new BooleanQuery.Builder()
+        		  .add(query1, BooleanClause.Occur.SHOULD)
+        		  .add(query2, BooleanClause.Occur.SHOULD).build();
+    	  
+    	  System.out.println("Searching for: " + queryFinal.toString(field));
+          
+          doPagingSearch(in, searcher, queryFinal, hitsPerPage, raw, queries == null && queryString == null);
+    	  
+      }
+      else {	//No espacial
+    	  Query query = parser.parse(line);
+          System.out.println("Searching for: " + query.toString(field));
+                
           if (repeat > 0) {                           // repeat & time as benchmark
             Date start = new Date();
-            for (int j = 0; j < repeat; j++) {
+            for (int i = 0; i < repeat; i++) {
               searcher.search(query, 100);
             }
             Date end = new Date();
             System.out.println("Time: "+(end.getTime()-start.getTime())+"ms");
           }
-        }
+          
+          doPagingSearch(in, searcher, query, hitsPerPage, raw, queries == null && queryString == null);
       }
 
       if (queryString != null) {
