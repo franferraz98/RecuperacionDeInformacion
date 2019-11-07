@@ -18,19 +18,34 @@ package org.apache.lucene.demo;
  */
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
+import java.text.Normalizer;
 import java.util.Date;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.es.SpanishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.DoublePoint;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.LongPoint;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -39,11 +54,141 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /** Simple command-line based search demo. */
 public class SearchFiles {
 
   private SearchFiles() {}
+  
+  static void processingNeeds(File file)
+	    throws IOException, ParserConfigurationException, SAXException {
+	    // do not try to index files that cannot be read
+	    if (file.canRead()) {
+	      //Si es un directorio
+	      if (file.isDirectory()) {
+	        String[] files = file.list();	//Recuperamos lista de los ficheros
+	        // an IO error could occur
+	        if (files != null) {
+	          for (int i = 0; i < files.length; i++) {
+	        	//Recursividad fichero a fichero
+	        	  processingNeeds(new File(file, files[i]));
+	          }
+	        }
+	      //es archivo
+	      } else {
+
+	        FileInputStream fis;
+	        //Intentamos abrir el fichero
+	        try {
+	          fis = new FileInputStream(file);
+	        } catch (FileNotFoundException fnfe) {
+	          // at least on windows, some temporary files raise this exception with an "access denied" message
+	          // checking if the file can be read doesn't help
+	          return;
+	        }
+
+	        try {
+
+	          // make a new, empty document
+	          /*Document doc = new Document();
+
+	          //Guardamos la ruta del fichero
+	          // Add the path of the file as a field named "path".  Use a
+	          // field that is indexed (i.e. searchable), but don't tokenize
+	          // the field into separate words and don't index term frequency
+	          // or positional information:
+	          Field pathField = new StringField("path", file.getPath(), Field.Store.YES);
+	          doc.add(pathField);
+
+	          // SE INDEXA PERO NO SE ALMACENA!!! ENTONCES PQ SE INDEXA? Q GANAS CON ESO
+	          // SI LUEGO NO PUEDES ACCEDER CON UN doc.get("modified")?
+	          // Add the last modified date of the file a field named "modified".
+	          // Use a LongField that is indexed (i.e. efficiently filterable with
+	          // NumericRangeFilter).  This indexes to milli-second resolution, which
+	          // is often too fine.  You could instead create a number based on
+	          // year/month/day/hour/minutes/seconds, down the resolution you require.
+	          // For example the long value 2011021714 would mean
+	          // February 17, 2011, 2-3 PM.
+	          doc.add(new LongPoint("modified", file.lastModified()));
+	          
+	          //AQUI SI QUE LO ALMACENAMOS PARA USARLO EN EL PUNTO 2.2 DE LA PRACTICA
+	          //PONIENDO EL Field.Store.YES.
+	          Date d = new Date(file.lastModified());
+	          String s = "modified: " + d.toString();
+	          Field modifiedField = new StringField("modified", s, Field.Store.YES);
+	          doc.add(modifiedField);
+
+	          // Add the contents of the file to a field named "contents".  Specify a Reader,
+	          // so that the text of the file is tokenized and indexed, but not stored.
+	          // Note that FileReader expects the file to be in UTF-8 encoding.
+	          // If that's not the case searching for special characters will fail.
+	          doc.add(new TextField("contents", new BufferedReader(new InputStreamReader(fis, "UTF-8"))));*/
+	          
+	          //INDICES SEPARADOS PARA CADA CAMPO DE XML DIFERENTE (title, identifier, subject ...),
+	          //EN VEZ DE UN SOLO INDICE PARA TODO EL CONTENIDO
+	          DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+	          DocumentBuilder builder = builderFactory.newDocumentBuilder();
+	          org.w3c.dom.Document document = builder.parse(file.getPath());
+	          
+	          NodeList listIds = document.getElementsByTagName("identifier");
+	          NodeList listTexts = document.getElementsByTagName("text");
+	          
+	          String id="", text="";
+	          for(int i=0; i<listIds.getLength(); i++) {
+	        	  id = listIds.item(i).getTextContent();
+	        	  System.out.println(id);
+	        	  text = listTexts.item(i).getTextContent().trim();
+	        	  
+	        	  String[] textSinPuntos = text.split("\\.");
+	        	  for(int k=0; k<textSinPuntos.length; k++) {
+	        		  textSinPuntos[k] = textSinPuntos[k].trim();
+	        	  }
+	        	  
+	        	  
+	        	  String[] aux;
+	        	 
+	        	  int longitud=0;
+	        	  for(int k=0; k<textSinPuntos.length; k++) {
+	        		  aux = textSinPuntos[k].split(",");
+	        		  for(int z=0; z<aux.length; z++) {
+	        			  aux[z]=aux[z];
+	        		  }
+	        		  longitud=longitud+aux.length;
+	        	  }
+	        	  
+	        	  String[] textSinComa = new String[longitud];
+	        	  int j=0;  
+	        	  for(int k=0; k<textSinPuntos.length; k++) {
+	        		  aux = textSinPuntos[k].split(",");
+	        		  
+	        		  for(int z=0; z<aux.length; z++) {
+	        			  textSinComa[j] = aux[z].trim();
+	        			  j++;
+	        		  }
+	        	  }
+	        	  
+	        	  for(int k=0; k<textSinComa.length; k++) {
+	        		  textSinComa[k]=Normalizer.normalize(textSinComa[k], Normalizer.Form.NFD).replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
+	        		  System.out.println(textSinComa[k]);
+	        	  }
+	        	  
+	        	  /*try (InputStream modelIn = new FileInputStream("en-ner-person.bin")){
+	        		  TokenNameFinderModel model = new TokenNameFinderModel(modelIn);
+	        	  }*/
+
+	          }
+
+	        } finally {
+	          fis.close();
+	        }
+	      }
+	      
+	    }
+  }
+	    
+
 
   /** Simple command-line based search demo. */
   public static void main(String[] args) throws Exception {
@@ -61,6 +206,8 @@ public class SearchFiles {
     boolean raw = false;
     String queryString = null;
     int hitsPerPage = 10;
+    
+    String infoNeeds = null;
     
     for(int i = 0;i < args.length;i++) {
       if ("-index".equals(args[i])) {
@@ -88,11 +235,28 @@ public class SearchFiles {
         }
         i++;
       }
+      else if("-infoNeeds".equals(args[i])) {
+    	  infoNeeds = args[i+1];
+          i++;
+      }
     }
+    
+    if (infoNeeds == null) {
+        System.err.println("Usage: " + usage);
+        System.exit(1);
+     }
+    
+    final File needsDir = new File(infoNeeds);
+    if (!needsDir.exists() || !needsDir.canRead()) {
+      System.out.println("Document directory '" +needsDir.getAbsolutePath()+ "' does not exist or is not readable, please check the path");
+      System.exit(1);
+    }
+    
+    processingNeeds(needsDir);
     
     IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
     IndexSearcher searcher = new IndexSearcher(reader);
-    Analyzer analyzer = new SpanishAnalyzer2();
+    Analyzer analyzer = new SpanishAnalyzer2(SpanishAnalyzer2.createStopSet2());
 
     BufferedReader in = null;
     if (queries != null) {
