@@ -27,6 +27,9 @@ import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.text.Normalizer;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -62,7 +65,7 @@ public class SearchFiles {
 
   private SearchFiles() {}
   
-  static void processingNeeds(File file)
+  public static void processingNeeds(File file)
 	    throws IOException, ParserConfigurationException, SAXException {
 	    // do not try to index files that cannot be read
 	    if (file.canRead()) {
@@ -90,44 +93,6 @@ public class SearchFiles {
 	        }
 
 	        try {
-
-	          // make a new, empty document
-	          /*Document doc = new Document();
-
-	          //Guardamos la ruta del fichero
-	          // Add the path of the file as a field named "path".  Use a
-	          // field that is indexed (i.e. searchable), but don't tokenize
-	          // the field into separate words and don't index term frequency
-	          // or positional information:
-	          Field pathField = new StringField("path", file.getPath(), Field.Store.YES);
-	          doc.add(pathField);
-
-	          // SE INDEXA PERO NO SE ALMACENA!!! ENTONCES PQ SE INDEXA? Q GANAS CON ESO
-	          // SI LUEGO NO PUEDES ACCEDER CON UN doc.get("modified")?
-	          // Add the last modified date of the file a field named "modified".
-	          // Use a LongField that is indexed (i.e. efficiently filterable with
-	          // NumericRangeFilter).  This indexes to milli-second resolution, which
-	          // is often too fine.  You could instead create a number based on
-	          // year/month/day/hour/minutes/seconds, down the resolution you require.
-	          // For example the long value 2011021714 would mean
-	          // February 17, 2011, 2-3 PM.
-	          doc.add(new LongPoint("modified", file.lastModified()));
-	          
-	          //AQUI SI QUE LO ALMACENAMOS PARA USARLO EN EL PUNTO 2.2 DE LA PRACTICA
-	          //PONIENDO EL Field.Store.YES.
-	          Date d = new Date(file.lastModified());
-	          String s = "modified: " + d.toString();
-	          Field modifiedField = new StringField("modified", s, Field.Store.YES);
-	          doc.add(modifiedField);
-
-	          // Add the contents of the file to a field named "contents".  Specify a Reader,
-	          // so that the text of the file is tokenized and indexed, but not stored.
-	          // Note that FileReader expects the file to be in UTF-8 encoding.
-	          // If that's not the case searching for special characters will fail.
-	          doc.add(new TextField("contents", new BufferedReader(new InputStreamReader(fis, "UTF-8"))));*/
-	          
-	          //INDICES SEPARADOS PARA CADA CAMPO DE XML DIFERENTE (title, identifier, subject ...),
-	          //EN VEZ DE UN SOLO INDICE PARA TODO EL CONTENIDO
 	          DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 	          DocumentBuilder builder = builderFactory.newDocumentBuilder();
 	          org.w3c.dom.Document document = builder.parse(file.getPath());
@@ -139,9 +104,17 @@ public class SearchFiles {
 	          for(int i=0; i<listIds.getLength(); i++) {
 	        	  id = listIds.item(i).getTextContent();
 	        	  System.out.println(id);
-	        	  text = listTexts.item(i).getTextContent().trim();
+	        	  text = listTexts.item(i).getTextContent().trim().replace(".", "").replace(",", "");
+	        	  text = Normalizer.normalize(text, Normalizer.Form.NFD).replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
+	        	  System.out.println(text);
 	        	  
-	        	  String[] textSinPuntos = text.split("\\.");
+	        	  Map<String, Integer> fechas = encuentraFechas(text);
+	        	  
+	        	  for (Map.Entry<String, Integer> entry : fechas.entrySet()) {
+	        		  System.out.println("clave=" + entry.getKey() + ", valor=" + entry.getValue());
+	        	  }
+	        	  
+	        	  /*String[] textSinPuntos = text.split("\\.");
 	        	  for(int k=0; k<textSinPuntos.length; k++) {
 	        		  textSinPuntos[k] = textSinPuntos[k].trim();
 	        	  }
@@ -172,11 +145,7 @@ public class SearchFiles {
 	        	  for(int k=0; k<textSinComa.length; k++) {
 	        		  textSinComa[k]=Normalizer.normalize(textSinComa[k], Normalizer.Form.NFD).replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
 	        		  System.out.println(textSinComa[k]);
-	        	  }
-	        	  
-	        	  /*try (InputStream modelIn = new FileInputStream("en-ner-person.bin")){
-	        		  TokenNameFinderModel model = new TokenNameFinderModel(modelIn);
-	        	  }*/
+	        	  }*/ 	  
 
 	          }
 
@@ -187,7 +156,85 @@ public class SearchFiles {
 	      
 	    }
   }
-	    
+  
+  
+  public static Map<String, Integer> encuentraFechas(String text){
+	  Map<String, Integer> fechas= new HashMap<String, Integer>();
+	  Scanner buscar = new Scanner(text);
+	  
+	  while(buscar.hasNext()) {
+		  String s = buscar.next();
+		  
+		  if(s.equals("de") || s.equals("entre") || s.equals("desde") || s.equals("del")){
+  			//de/entre/desde/del X hasta/a/y/al Y
+			  if(buscar.hasNext()) s = buscar.next();
+			if(isNumeric(s)) {
+				int num1=Integer.parseInt(s);
+				if(buscar.hasNext()) s = buscar.next();
+				if(s.equals("hasta") || s.equals("a") || s.equals("y") || s.equals("al")){
+					if(buscar.hasNext()) s = buscar.next();
+					if(isNumeric(s)) {
+						int num2=Integer.parseInt(s);
+						fechas.put("intervalo", num1);
+						fechas.put("intervaloNext", num2);
+					}
+				}
+			}
+  		  }
+		  else if(s.equals("ultimos") || s.equals("anterior") || s.equals("anteriores")) {
+			  //ultimos X anos
+			  //anterior a X
+			  //anteriores a X
+			  if(buscar.hasNext()) s = buscar.next();
+			  if(isNumeric(s)) {
+				  int num1=Integer.parseInt(s);
+				  if(buscar.hasNext()) s=buscar.next();
+				  if(s.equals("anos")) {
+					  fechas.put("ultimos", num1);
+				  }
+			  }
+			  else if(s.equals("a")) {
+				  if(buscar.hasNext()) s = buscar.next();
+				  if(isNumeric(s)) {
+					int num1=Integer.parseInt(s);
+					fechas.put("anterior", num1);
+				  }
+			  }
+		  }
+		  else if(s.equals("a")) {
+			  //a partir de X
+			  if(buscar.hasNext()) {
+				  s=buscar.next();
+				  if(s.equals("partir")) {
+					  if(buscar.hasNext()) s=buscar.next();
+					  if(s.equals("de")) {
+						  if(buscar.hasNext()) s=buscar.next();
+						  if(isNumeric(s)) {
+							  int num1 = Integer.parseInt(s);
+							  fechas.put("posterior", num1);
+						  }
+					  }
+				  }
+			  }
+		  }
+	  }
+	  
+	  buscar.close();	  
+	  return fechas;
+  }
+  
+  public static boolean isNumeric(String cadena) {
+      boolean resultado;
+
+      try {
+          Integer.parseInt(cadena);
+          resultado = true;
+      } catch (NumberFormatException excepcion) {
+          resultado = false;
+      }
+
+      return resultado;
+  }
 
 
   /** Simple command-line based search demo. */
@@ -256,7 +303,7 @@ public class SearchFiles {
     
     IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
     IndexSearcher searcher = new IndexSearcher(reader);
-    Analyzer analyzer = new SpanishAnalyzer2(SpanishAnalyzer2.createStopSet2());
+    Analyzer analyzer = new SpanishAnalyzer2();
 
     BufferedReader in = null;
     if (queries != null) {
