@@ -1,7 +1,11 @@
 package org.apache.lucene.demo;
 
-
 /*
+ * Alumnos: Francisco Ferraz (737312) y Guillermo Cruz (682433)
+ * Nombre fichero: IndexFiles.java
+ * Fecha: 08 de noviembre de 2019
+ * Descripción: Archivo que crea un índice de documentos del repositorio digital Zaguán
+ * 
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,8 +23,6 @@ package org.apache.lucene.demo;
  */
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.es.SpanishAnalyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.LongPoint;
@@ -30,11 +32,8 @@ import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -53,8 +52,6 @@ import javax.xml.parsers.ParserConfigurationException;
 
 /** Index all text files under a directory.
  * <p>
- * This is a command-line application demonstrating simple Lucene indexing.
- * Run it with no command-line arguments for usage information.
  */
 public class IndexFiles {
 
@@ -65,12 +62,11 @@ public class IndexFiles {
  * @throws ParserConfigurationException */
   public static void main(String[] args) throws ParserConfigurationException, SAXException {
     String usage = "java org.apache.lucene.demo.IndexFiles"
-                 + " [-index INDEX_PATH] [-docs DOCS_PATH] [-update]\n\n"
+                 + " -index <indexPath> -docs <docsPath>\n\n"
                  + "This indexes the documents in DOCS_PATH, creating a Lucene index"
                  + "in INDEX_PATH that can be searched with SearchFiles";
     String indexPath = "index";
     String docsPath = null;
-    boolean create = true;
     for(int i=0;i<args.length;i++) {
       if ("-index".equals(args[i])) {
         indexPath = args[i+1];
@@ -78,8 +74,6 @@ public class IndexFiles {
       } else if ("-docs".equals(args[i])) {
         docsPath = args[i+1];
         i++;
-      } else if ("-update".equals(args[i])) {
-        create = false;
       }
     }
 
@@ -102,32 +96,12 @@ public class IndexFiles {
       Analyzer analyzer = new SpanishAnalyzer2(SpanishAnalyzer2.createStopSet3());
       IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
-      if (create) {
-        // Create a new index in the directory, removing any
-        // previously indexed documents:
-        iwc.setOpenMode(OpenMode.CREATE);
-      } else {
-        // Add new documents to an existing index:
-        iwc.setOpenMode(OpenMode.CREATE_OR_APPEND);
-      }
-
-      // Optional: for better indexing performance, if you
-      // are indexing many documents, increase the RAM
-      // buffer.  But if you do this, increase the max heap
-      // size to the JVM (eg add -Xmx512m or -Xmx1g):
-      //
-      // iwc.setRAMBufferSizeMB(256.0);
+      // Create a new index in the directory, removing any
+      // previously indexed documents:
+      iwc.setOpenMode(OpenMode.CREATE);
 
       IndexWriter writer = new IndexWriter(dir, iwc);
       indexDocs(writer, docDir);
-
-      // NOTE: if you want to maximize search performance,
-      // you can optionally call forceMerge here.  This can be
-      // a terribly costly operation, so generally it's only
-      // worth it when your index is relatively static (ie
-      // you're done adding documents to it):
-      //
-      // writer.forceMerge(1);
 
       writer.close();
 
@@ -140,6 +114,9 @@ public class IndexFiles {
     }
   }
   
+  /** Introduce en el índice los elementos del xml contenidos en la etiqueta <campo>
+   *  con el tipo <fieldType>
+   */
   static void introducirCampo(org.w3c.dom.Document document, String campo, String fieldType, Document doc) {
 	  NodeList list = document.getElementsByTagName("dc:"+campo);
 	 
@@ -152,24 +129,12 @@ public class IndexFiles {
 					 doc.add(infoT);
 			  }
 			  break;
+			  
 		  case("StringField"):
 			  if(campo.equals("identifier")) {
 				  String id = list.item(0).getTextContent().substring(31);
 				  StringField infoId = new StringField(campo, id, Field.Store.YES);
 				  doc.add(infoId);
-			  }
-			  else if(campo.equals("date")) {
-				  String date = list.item(0).getTextContent().trim();
-				  if(date.length()>4) {
-					  date = date.substring(0, date.indexOf("T")).replace("-", "");
-				  }
-				  else {
-					  for(int i=date.length(); i<8; i++) {
-						  date+="0";
-					  }
-				  }
-				  DoublePoint infoDate = new DoublePoint(campo, Double.parseDouble(date));
-				  doc.add(infoDate);
 			  }
 			  else if(campo.equals("type")) {
 				  StringField infoType = null;
@@ -188,6 +153,22 @@ public class IndexFiles {
 				  }
 			  }
 			  
+			  break;
+			  
+		  case("DoublePoint"):
+			  String date = list.item(0).getTextContent().trim();
+			  if(date.length()>4) {
+				  date = date.substring(0, date.indexOf("T")).replace("-", "");
+			  }
+			  else {
+				  for(int i=date.length(); i<8; i++) {
+					  date+="0";
+				  }
+			  }
+			  
+			  //Se guarda la fecha como un DoublePoint para poder hacer comparaciones
+			  DoublePoint infoDate = new DoublePoint(campo, Double.parseDouble(date));
+			  doc.add(infoDate);
 			  break;
 		  default:
 			  break;
@@ -252,8 +233,6 @@ public class IndexFiles {
           Field pathField = new StringField("path", file.getPath(), Field.Store.YES);
           doc.add(pathField);
 
-          // SE INDEXA PERO NO SE ALMACENA!!! ENTONCES PQ SE INDEXA? Q GANAS CON ESO
-          // SI LUEGO NO PUEDES ACCEDER CON UN doc.get("modified")?
           // Add the last modified date of the file a field named "modified".
           // Use a LongField that is indexed (i.e. efficiently filterable with
           // NumericRangeFilter).  This indexes to milli-second resolution, which
@@ -262,13 +241,6 @@ public class IndexFiles {
           // For example the long value 2011021714 would mean
           // February 17, 2011, 2-3 PM.
           doc.add(new LongPoint("modified", file.lastModified()));
-          
-          //AQUI SI QUE LO ALMACENAMOS PARA USARLO EN EL PUNTO 2.2 DE LA PRACTICA
-          //PONIENDO EL Field.Store.YES.
-          Date d = new Date(file.lastModified());
-          String s = "modified: " + d.toString();
-          Field modifiedField = new StringField("modified", s, Field.Store.YES);
-          doc.add(modifiedField);
 
           // Add the contents of the file to a field named "contents".  Specify a Reader,
           // so that the text of the file is tokenized and indexed, but not stored.
@@ -276,8 +248,7 @@ public class IndexFiles {
           // If that's not the case searching for special characters will fail.
           doc.add(new TextField("contents", new BufferedReader(new InputStreamReader(fis, "UTF-8"))));
           
-          //INDICES SEPARADOS PARA CADA CAMPO DE XML DIFERENTE (title, identifier, subject ...),
-          //EN VEZ DE UN SOLO INDICE PARA TODO EL CONTENIDO
+          //INDICES SEPARADOS PARA CADA CAMPO DE XML DIFERENTE (creator, title, identifier ...),
           DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
           DocumentBuilder builder = builderFactory.newDocumentBuilder();
           org.w3c.dom.Document document = builder.parse(file.getPath());
@@ -289,31 +260,12 @@ public class IndexFiles {
           introducirCampo(document, "publisher", "TextField", doc);
           introducirCampo(document, "description", "TextField", doc);
           introducirCampo(document, "language", "StringField", doc);
-          introducirCampo(document, "date", "StringField", doc);
-          introducirCampo(document, "type", "StringField", doc);
-          /*introducirCampo(document, "description", "TextField", doc);
-          introducirCampo(document, "creator", "TextField", doc);
-          introducirCampo(document, "publisher", "TextField", doc);
-          introducirCampo(document, "format", "StringField", doc);
-          introducirCampo(document, "language", "StringField", doc);
-          introducirCampo(document, "LowerCorner", "DoublePoint", doc);
-          introducirCampo(document, "UpperCorner", "DoublePoint", doc);
-          introducirCampo(document, "issued", "StringField", doc);
-          introducirCampo(document, "created", "StringField", doc);
-          introducirCampo(document, "temporal", "StringField", doc);*/
-          
+          introducirCampo(document, "date", "DoublePoint", doc);
+          introducirCampo(document, "type", "StringField", doc);     
 
-          if (writer.getConfig().getOpenMode() == OpenMode.CREATE) {
-            // New index, so we just add the document (no old document can be there):
-            System.out.println("adding " + file);
-            writer.addDocument(doc);
-          } else {
-            // Existing index (an old copy of this document may have been indexed) so
-            // we use updateDocument instead to replace the old one matching the exact
-            // path, if present:
-            System.out.println("updating " + file);
-            writer.updateDocument(new Term("path", file.getPath()), doc);
-          }
+          // New index, so we just add the document (no old document can be there):
+          System.out.println("adding " + file);
+          writer.addDocument(doc);
 
         } finally {
           fis.close();
