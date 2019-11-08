@@ -103,7 +103,7 @@ public final class SpanishAnalyzer2 extends StopwordAnalyzerBase {
 	  }
 	  
 	  public static CharArraySet createStopSet2() {
-		  String[] stopWords = {"el", "la", "lo", "en", "modelo"};
+		  String[] stopWords = {"el", "la", "lo", "en"};
 		  CharArraySet stopSet = StopFilter.makeStopSet(stopWords);
 		  return stopSet;
 	  }

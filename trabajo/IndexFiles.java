@@ -99,7 +99,7 @@ public class IndexFiles {
       System.out.println("Indexing to directory '" + indexPath + "'...");
 
       Directory dir = FSDirectory.open(Paths.get(indexPath));
-      Analyzer analyzer = new SpanishAnalyzer2();
+      Analyzer analyzer = new SpanishAnalyzer2(SpanishAnalyzer2.createStopSet3());
       IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
       if (create) {
@@ -141,16 +141,7 @@ public class IndexFiles {
   }
   
   static void introducirCampo(org.w3c.dom.Document document, String campo, String fieldType, Document doc) {
-	  NodeList list;
-	  if(campo.equals("LowerCorner") || campo.equals("UpperCorner")) {
-		  list = document.getElementsByTagName("ows:"+campo);
-	  }
-	  else if(campo.equals("issued") || campo.equals("created") || campo.equals("temporal")) {
-		  list = document.getElementsByTagName("dcterms:"+campo);
-	  }
-	  else {
-		  list = document.getElementsByTagName("dc:"+campo);
-	  }
+	  NodeList list = document.getElementsByTagName("dc:"+campo);
 	 
 	 if(list != null && list.getLength() > 0) {
 		 switch(fieldType){
@@ -162,29 +153,7 @@ public class IndexFiles {
 			  }
 			  break;
 		  case("StringField"):
-			  if(campo.equals("issued") || campo.equals("created")) {
-				  StringField infoFecha = new StringField(campo, (list.item(0).getTextContent()).replace("-", ""), Field.Store.YES);
-				  if(!infoFecha.stringValue().equals("")) {
-					  doc.add(infoFecha);
-				  }
-			  }
-			  else if(campo.equals("temporal")) {
-				  System.out.println(list.item(0).getTextContent());
-				  String[] elementos = list.item(0).getTextContent().split(";");
-				  String aux = elementos[0].substring(elementos[0].indexOf("=")+1).replace("-", "");
-				  if(!aux.equals("None")) {
-					  DoublePoint begin = new DoublePoint("begin", 
-					  			Double.parseDouble(aux)); 
-					  doc.add(begin);
-				  }			 
-				  
-				  if(elementos.length > 1) {
-					  DoublePoint end = new DoublePoint("end", 
-							  		Double.parseDouble(elementos[1].substring(elementos[1].indexOf("=")+1).replace("-", "")));
-					  doc.add(end);
-				  }
-			  }
-			  else if(campo.equals("identifier")) {
+			  if(campo.equals("identifier")) {
 				  String id = list.item(0).getTextContent().substring(31);
 				  StringField infoId = new StringField(campo, id, Field.Store.YES);
 				  doc.add(infoId);
@@ -199,8 +168,17 @@ public class IndexFiles {
 						  date+="0";
 					  }
 				  }
-				  StringField infoDate = new StringField(campo, date, Field.Store.YES);
+				  DoublePoint infoDate = new DoublePoint(campo, Double.parseDouble(date));
 				  doc.add(infoDate);
+			  }
+			  else if(campo.equals("type")) {
+				  StringField infoType = null;
+				  String[] s;
+				  for(int i=0; i<list.getLength(); i++) {
+					  	 s = list.item(i).getTextContent().split("/");
+						 infoType = new StringField(campo, s[s.length-1].toLowerCase(), Field.Store.YES);
+						 doc.add(infoType);
+				  }
 			  }
 			  else {
 				  StringField infoS = null;
@@ -208,44 +186,6 @@ public class IndexFiles {
 						 infoS = new StringField(campo, list.item(i).getTextContent(), Field.Store.YES);
 						 doc.add(infoS);
 				  }
-			  }
-			  
-			  break;
-		  case("DoublePoint"):
-			  if(campo.equals("LowerCorner")) {
-				  	DoublePoint west = null;	//Xmin
-				  	DoublePoint south = null;	//Ymin
-				  	
-				  	String[] s = list.item(0).getTextContent().split(" ");
-				  	Double[] d = { Double.parseDouble(s[0]), Double.parseDouble(s[1])};
-				  	
-				  	west = new DoublePoint("west", d[0]);
-				  	doc.add(west);
-				  	south = new DoublePoint("south", d[1]);
-				  	doc.add(south);
-				  
-				  	/*StringField west = null;
-				  	StringField south = null;
-				  	
-				  	String[] s = list.item(0).getTextContent().split(" ");
-				  	
-				  	west = new StringField("west", s[0], Field.Store.YES);
-				  	doc.add(west);
-				  	south = new StringField("south", s[1], Field.Store.YES);
-				  	doc.add(south);*/
-				  	
-			  }
-			  else if(campo.equals("UpperCorner")){
-				  	DoublePoint east = null;	//Xmax
-				  	DoublePoint north = null;	//Ymax
-				  	
-				  	String[] s = list.item(0).getTextContent().split(" ");
-				  	Double[] d = { Double.parseDouble(s[0]), Double.parseDouble(s[1])};
-				  	
-				  	east = new DoublePoint("east", d[0]);
-				  	doc.add(east);
-				  	north = new DoublePoint("north", d[1]);
-				  	doc.add(north);
 			  }
 			  
 			  break;
@@ -350,8 +290,8 @@ public class IndexFiles {
           introducirCampo(document, "description", "TextField", doc);
           introducirCampo(document, "language", "StringField", doc);
           introducirCampo(document, "date", "StringField", doc);
-          /*introducirCampo(document, "type", "StringField", doc);
-          introducirCampo(document, "description", "TextField", doc);
+          introducirCampo(document, "type", "StringField", doc);
+          /*introducirCampo(document, "description", "TextField", doc);
           introducirCampo(document, "creator", "TextField", doc);
           introducirCampo(document, "publisher", "TextField", doc);
           introducirCampo(document, "format", "StringField", doc);
@@ -361,6 +301,7 @@ public class IndexFiles {
           introducirCampo(document, "issued", "StringField", doc);
           introducirCampo(document, "created", "StringField", doc);
           introducirCampo(document, "temporal", "StringField", doc);*/
+          
 
           if (writer.getConfig().getOpenMode() == OpenMode.CREATE) {
             // New index, so we just add the document (no old document can be there):

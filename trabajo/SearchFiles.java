@@ -18,9 +18,12 @@ package org.apache.lucene.demo;
  */
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -28,6 +31,8 @@ import java.nio.file.Paths;
 import java.text.Normalizer;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -57,16 +62,25 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.QueryBuilder;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import opennlp.tools.namefind.NameFinderME;
+import opennlp.tools.namefind.TokenNameFinderModel;
+import opennlp.tools.postag.POSModel;
+import opennlp.tools.postag.POSTaggerME;
+import opennlp.tools.util.Span;
 
 /** Simple command-line based search demo. */
 public class SearchFiles {
 
   private SearchFiles() {}
   
-  public static void processingNeeds(File file)
-	    throws IOException, ParserConfigurationException, SAXException {
+  static int prueba = 1;
+  
+  public static void processingNeeds(File file, String index, String field, String output)
+	    throws IOException, ParserConfigurationException, SAXException, Exception {
 	    // do not try to index files that cannot be read
 	    if (file.canRead()) {
 	      //Si es un directorio
@@ -76,7 +90,7 @@ public class SearchFiles {
 	        if (files != null) {
 	          for (int i = 0; i < files.length; i++) {
 	        	//Recursividad fichero a fichero
-	        	  processingNeeds(new File(file, files[i]));
+	        	  processingNeeds(new File(file, files[i]), index, field, output);
 	          }
 	        }
 	      //es archivo
@@ -93,6 +107,9 @@ public class SearchFiles {
 	        }
 
 	        try {
+	        	
+	          BufferedWriter writer = new BufferedWriter(new FileWriter(output));
+	          
 	          DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 	          DocumentBuilder builder = builderFactory.newDocumentBuilder();
 	          org.w3c.dom.Document document = builder.parse(file.getPath());
@@ -100,140 +117,287 @@ public class SearchFiles {
 	          NodeList listIds = document.getElementsByTagName("identifier");
 	          NodeList listTexts = document.getElementsByTagName("text");
 	          
+	          IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
+	          IndexSearcher searcher = new IndexSearcher(reader);
+	          Analyzer analyzer = new SpanishAnalyzer2(SpanishAnalyzer2.createStopSet3());
+	          
+	          QueryParser parser = new QueryParser(field, analyzer);
+	          
 	          String id="", text="";
+	          Query[] querys = new Query[5];
+	          BooleanQuery[] bQuerys = new BooleanQuery[4];
 	          for(int i=0; i<listIds.getLength(); i++) {
+	        	  for(int k=0; k<querys.length; k++) {
+	        		  querys[k]=null;
+	        	  }
+	        	  for(int k=0; k<bQuerys.length; k++) {
+	        		  bQuerys[k]=null;
+	        	  }
+	        	  
+	        	  Query finRangeQuery = null;
+	        	  Query beginRangeQuery = null;
+	        	  
 	        	  id = listIds.item(i).getTextContent();
 	        	  System.out.println(id);
 	        	  text = listTexts.item(i).getTextContent().trim().replace(".", "").replace(",", "");
-	        	  text = Normalizer.normalize(text, Normalizer.Form.NFD).replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
+	        	  text = Normalizer.normalize(text, Normalizer.Form.NFD).replaceAll("[\\p{InCombiningDiacriticalMarks}]", "").replace("?", "");
+	        	  text = text.replace("?", "").replace("¿", "");
+	        	  
+	        	  TokenNameFinderModel model;
+	        	  try (InputStream modelIn = new FileInputStream("es-ner-person.bin")){
+	        		 model = new TokenNameFinderModel(modelIn);
+	        	  }
+	        	  NameFinderME nameFinder = new NameFinderME(model);
+	        	  
+	        	  String[] textNombres = text.split(" ");
+	        	  Span nameSpans[] = nameFinder.find(textNombres);
+	        	  
+	        	  /* CONSULTA DE NOMBRES */
+                  if(nameSpans.length>0) {
+               	   String consulta = "";
+	                   for(Span s: nameSpans){
+	 	                  // s.getStart() : contains the start index of possible name in the input string array
+	 	                  // s.getEnd() : contains the end index of the possible name in the input string array
+	 	                  for(int indexx=s.getStart();indexx<s.getEnd();indexx++){
+	 	                	  consulta = consulta +"creator:"+textNombres[indexx]+" ";
+	 	                	  text = text.replace(textNombres[indexx], "");
+	 	                  }
+	 	               }
+	                   
+	                   querys[0] = parser.parse(consulta.trim());
+	                   //System.out.println("Searching for: " + query.toString(field));
+	                   //doPagingSearch(in, searcher, query, 10, false, true);
+                  }
+                  
+                  text = text.toLowerCase();
+	        	  Map<String, Integer> fechas = encuentraFechas(text);	  	        	  
+	        	  text = encuentraNombres(text).trim();
+	        	  text = encuentraBachelorMaster(text).trim();
+	        	  
+	        	  /* SEGUNDA PASADA CONSULTA DE NOMBRES */
+	        	  String auxNombres[] = text.split(" ");
+	        	  String consultaNombre="";
+	        	  
+	        	  for(int k=0; k<auxNombres.length; k++) {
+	        		  if(auxNombres[k].equals("_nombre_")) {
+	        			  consultaNombre=consultaNombre + "creator:"+auxNombres[k+1]+" ";
+	        			  text = text.replace(auxNombres[k+1], "");
+	        		  }
+	        	  }
+	        	  
+	        	  if(!consultaNombre.isEmpty()) {
+	        		  text = text.replace("_nombre_", "");
+	        		  querys[1] = parser.parse(consultaNombre.trim());
+	                  //System.out.println("Searching for: " + query.toString(field));
+	                  //doPagingSearch(in, searcher, query, 10, false, true);
+	        	  }
+	        	  
+	        	  
+	        	  /*  CONSULTA DE FECHAS (EN CASO DE QUE LAS HAYA)	*/
+	        	  Iterator<Map.Entry<String, Integer>> it = fechas.entrySet().iterator(); 
+	              
+	              while(it.hasNext()) 
+	              { 
+	            	   Map.Entry<String, Integer> entry = it.next();
+	            	   
+	            	   String aux;
+	            	   Double inicio;
+	            	   
+	                   switch(entry.getKey()){
+		        		  case("intervalo"):
+		        			  aux = entry.getValue().toString();
+		        		  	  entry = it.next();
+			        	  	  String aux1 = entry.getValue().toString();
+			        	  	  
+			        	  	  if(aux.length()<8){
+				          		  for(int k=aux.length(); k<8; k++) {
+				          			  aux+="0";
+				          		  }
+				          	  }
+			        	  	  
+			        	  	  if(aux1.length()<8){
+				          		  for(int k=aux1.length(); k<8; k++) {
+				          			aux1+="0";
+				          		  }
+				          	  }
+			        	  	  
+			        	  	  inicio=Double.parseDouble(aux);
+			        	  	  Double fin=Double.parseDouble(aux1);
+			        	  	  
+			        	  	 //begin <= fecha fin
+				              beginRangeQuery = DoublePoint.newRangeQuery("date" , Double.NEGATIVE_INFINITY, fin);
+				              //end >= fecha inicio
+				              finRangeQuery = DoublePoint.newRangeQuery("date", inicio , Double.POSITIVE_INFINITY);
+				              
+				              bQuerys[0] = new BooleanQuery.Builder()
+				            		  .add(beginRangeQuery, BooleanClause.Occur.MUST)
+				            		  .add(finRangeQuery, BooleanClause.Occur.MUST).build();
+				              
+				              //System.out.println("Searching for: " + query.toString(field));
+				              
+				              //doPagingSearch(in, searcher, booleanQuery, 10, false, true);
+			        	  	  
+		        			  break;
+		        		  case("ultimos"):
+		        			  Integer auxNum = (int)2019-entry.getValue();
+		        		  	  aux = auxNum.toString();
+			        	  	  
+			        	  	  if(aux.length()<8){
+				          		  for(int k=aux.length(); k<8; k++) {
+				          			  aux+="0";
+				          		  }
+				          	  }
+			        	  	  
+			        	  	  inicio=Double.parseDouble(aux);
+			        	  	  
+			        	  	  //begin <= fecha fin
+				              //Query beginRangeQuery = DoublePoint.newRangeQuery("date" , Double.NEGATIVE_INFINITY, fin);
+				              //end >= fecha inicio
+				              finRangeQuery = DoublePoint.newRangeQuery("date", inicio , Double.POSITIVE_INFINITY);
+				              
+				              bQuerys[1] = new BooleanQuery.Builder()
+				            		  .add(finRangeQuery, BooleanClause.Occur.MUST).build();
+				              
+				              //System.out.println("Searching for: " + query.toString(field));
+				              
+				              //doPagingSearch(in, searcher, booleanQuery, 10, false, true);
+				              
+		        			  break;
+		        		  case("anterior"):
+		        			  aux = entry.getValue().toString();
+		        		  
+			        	  	  if(aux.length()<8){
+				          		  for(int k=aux.length(); k<8; k++) {
+				          			  aux+="0";
+				          		  }
+				          	  }
+			        	  	  
+			        	  	  fin=Double.parseDouble(aux);
+			        	  	  
+			        	  	  //begin <= fecha fin
+				              beginRangeQuery = DoublePoint.newRangeQuery("date" , Double.NEGATIVE_INFINITY, fin);
+				              //end >= fecha inicio
+				              //finRangeQuery = DoublePoint.newRangeQuery("date", inicio , Double.POSITIVE_INFINITY);
+				              
+				              bQuerys[2] = new BooleanQuery.Builder()
+				            		  .add(beginRangeQuery, BooleanClause.Occur.MUST).build();
+				              
+				              //System.out.println("Searching for: " + query.toString(field));
+				              
+				              //doPagingSearch(in, searcher, booleanQuery, 10, false, true);
+				              
+		        			  break;
+		        		  case("posterior"):
+		        			  aux = entry.getValue().toString();
+		        		  
+			        	  	  if(aux.length()<8){
+				          		  for(int k=aux.length(); k<8; k++) {
+				          			  aux+="0";
+				          		  }
+				          	  }
+			        	  	  
+			        	  	  inicio=Double.parseDouble(aux);
+			        	  	  
+			        	  	  //begin <= fecha fin
+				              //Query beginRangeQuery = DoublePoint.newRangeQuery("date" , Double.NEGATIVE_INFINITY, fin);
+				              //end >= fecha inicio
+				              finRangeQuery = DoublePoint.newRangeQuery("date", inicio , Double.POSITIVE_INFINITY);
+				              
+				              bQuerys[3] = new BooleanQuery.Builder()
+				            		  .add(finRangeQuery, BooleanClause.Occur.MUST).build();
+				              
+				              //System.out.println("Searching for: " + query.toString(field));
+				              
+				              //doPagingSearch(in, searcher, booleanQuery, 10, false, true);
+			        	  	  
+			        	  	  
+		        			  break;
+		        		  default:
+		        			  break;
+		        		 } 
+	              }
+	              
+	              /*  CONSULTA DE TIPO	*/
+	              if(text.contains("_grado_")) {
+	            	  text = text.replace("_grado_", "");
+	            	  querys[2] = parser.parse("type:bachelorthesis");
+	            	  //System.out.println("Searching for: " + query.toString(field));
+	                  //doPagingSearch(in, searcher, query, 10, false, true);
+	              }
+	              if(text.contains("_master_")) {
+	            	  text = text.replace("_master_", "");
+	            	  querys[3] = parser.parse("type:masterthesis");
+	            	  //System.out.println("Searching for: " + query.toString(field));
+	                  //doPagingSearch(in, searcher, query, 10, false, true);
+	              }
+	              
+	              /* CONSULTA DE PALABRAS IMPORTANTES */
+	        	  POSModel modelPOST;
+	        	  try (InputStream modelIn = new FileInputStream("es-pos-maxent.bin")){
+		        		 modelPOST = new POSModel(modelIn);
+	        	  }
+	        	  
+	        	  POSTaggerME tagger = new POSTaggerME(modelPOST);
+	        	  
 	        	  System.out.println(text);
+	        	  String textSplit[] = text.split(" ");
+	        	  String tags[] = tagger.tag(textSplit);
 	        	  
-	        	  Map<String, Integer> fechas = encuentraFechas(text);
-	        	  
-	        	  for (Map.Entry<String, Integer> entry : fechas.entrySet()) {
-	        		  System.out.println("clave=" + entry.getKey() + ", valor=" + entry.getValue());
-	        	  }
-	        	  
-	        	  /*String[] textSinPuntos = text.split("\\.");
-	        	  for(int k=0; k<textSinPuntos.length; k++) {
-	        		  textSinPuntos[k] = textSinPuntos[k].trim();
-	        	  }
-	        	  
-	        	  
-	        	  String[] aux;
-	        	 
-	        	  int longitud=0;
-	        	  for(int k=0; k<textSinPuntos.length; k++) {
-	        		  aux = textSinPuntos[k].split(",");
-	        		  for(int z=0; z<aux.length; z++) {
-	        			  aux[z]=aux[z];
-	        		  }
-	        		  longitud=longitud+aux.length;
-	        	  }
-	        	  
-	        	  String[] textSinComa = new String[longitud];
-	        	  int j=0;  
-	        	  for(int k=0; k<textSinPuntos.length; k++) {
-	        		  aux = textSinPuntos[k].split(",");
-	        		  
-	        		  for(int z=0; z<aux.length; z++) {
-	        			  textSinComa[j] = aux[z].trim();
-	        			  j++;
+	        	  String consultaImp = "";
+	        	  for(int k=0; k<tags.length; k++) {
+	        		  if(tags[k].equals("NC") || tags[k].equals("AO") || tags[k].equals("AQ")) {
+	        			  if(!textSplit[k].equals("")) {
+	        				  consultaImp = consultaImp + "description:" + textSplit[k] + " "
+	        						  					+ "subject:" + textSplit[k] + " "
+	        						  					+ "title:" + textSplit[k] + " ";
+	        			  }
 	        		  }
 	        	  }
 	        	  
-	        	  for(int k=0; k<textSinComa.length; k++) {
-	        		  textSinComa[k]=Normalizer.normalize(textSinComa[k], Normalizer.Form.NFD).replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
-	        		  System.out.println(textSinComa[k]);
-	        	  }*/ 	  
-
+	        	  querys[4] = parser.parse(consultaImp);
+	        	  
+	        	  /*BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder();
+	        	  booleanQuery.add(queryNombres1, BooleanClause.Occur.SHOULD);
+	        	  finalQuery = new BooleanQuery.Builder().build();
+	        	  finalQuery.;
+	            		  .add(queryNombres1, BooleanClause.Occur.SHOULD)
+	            		  .add(queryNombres2, BooleanClause.Occur.SHOULD)
+	            		  .add(queryBach, BooleanClause.Occur.SHOULD)
+	            		  .add(queryMaster, BooleanClause.Occur.SHOULD)
+	            		  .add(queryImp, BooleanClause.Occur.SHOULD)
+	            		  .add(bQueryIntervalos, BooleanClause.Occur.SHOULD)
+	            		  .add(bQueryUltimos, BooleanClause.Occur.SHOULD)
+	            		  .add(bQueryAnterior, BooleanClause.Occur.SHOULD)
+	            		  .add(bQueryPosterior, BooleanClause.Occur.SHOULD).build();*/
+	        	  
+	        	  BooleanQuery.Builder booleanBuilder = new BooleanQuery.Builder();
+	        	  
+	        	  for(int k=0; k<querys.length;k++) {
+	        		  if(querys[k]!=null) {
+	        			  booleanBuilder.add(querys[k], BooleanClause.Occur.MUST);
+	        		  }
+	        	  }
+	        	  for(int k=0; k<bQuerys.length;k++) {
+	        		  if(bQuerys[k]!=null) {
+	        			  booleanBuilder.add(bQuerys[k], BooleanClause.Occur.MUST);
+	        		  }
+	        	  }
+	        	  
+	        	  BooleanQuery finalQuery = booleanBuilder.build();
+	        	  
+	        	  
+	        	System.out.println("Searching for: " + finalQuery.toString(field));
+                doPagingSearch(searcher, finalQuery, id, writer);
+                writer.flush();
 	          }
-
+	          reader.close();
+	          writer.close();
 	        } finally {
 	          fis.close();
 	        }
 	      }
 	      
 	    }
-  }
-  
-  
-  public static Map<String, Integer> encuentraFechas(String text){
-	  Map<String, Integer> fechas= new HashMap<String, Integer>();
-	  Scanner buscar = new Scanner(text);
-	  
-	  while(buscar.hasNext()) {
-		  String s = buscar.next();
-		  
-		  if(s.equals("de") || s.equals("entre") || s.equals("desde") || s.equals("del")){
-  			//de/entre/desde/del X hasta/a/y/al Y
-			  if(buscar.hasNext()) s = buscar.next();
-			if(isNumeric(s)) {
-				int num1=Integer.parseInt(s);
-				if(buscar.hasNext()) s = buscar.next();
-				if(s.equals("hasta") || s.equals("a") || s.equals("y") || s.equals("al")){
-					if(buscar.hasNext()) s = buscar.next();
-					if(isNumeric(s)) {
-						int num2=Integer.parseInt(s);
-						fechas.put("intervalo", num1);
-						fechas.put("intervaloNext", num2);
-					}
-				}
-			}
-  		  }
-		  else if(s.equals("ultimos") || s.equals("anterior") || s.equals("anteriores")) {
-			  //ultimos X anos
-			  //anterior a X
-			  //anteriores a X
-			  if(buscar.hasNext()) s = buscar.next();
-			  if(isNumeric(s)) {
-				  int num1=Integer.parseInt(s);
-				  if(buscar.hasNext()) s=buscar.next();
-				  if(s.equals("anos")) {
-					  fechas.put("ultimos", num1);
-				  }
-			  }
-			  else if(s.equals("a")) {
-				  if(buscar.hasNext()) s = buscar.next();
-				  if(isNumeric(s)) {
-					int num1=Integer.parseInt(s);
-					fechas.put("anterior", num1);
-				  }
-			  }
-		  }
-		  else if(s.equals("a")) {
-			  //a partir de X
-			  if(buscar.hasNext()) {
-				  s=buscar.next();
-				  if(s.equals("partir")) {
-					  if(buscar.hasNext()) s=buscar.next();
-					  if(s.equals("de")) {
-						  if(buscar.hasNext()) s=buscar.next();
-						  if(isNumeric(s)) {
-							  int num1 = Integer.parseInt(s);
-							  fechas.put("posterior", num1);
-						  }
-					  }
-				  }
-			  }
-		  }
-	  }
-	  
-	  buscar.close();	  
-	  return fechas;
-  }
-  
-  public static boolean isNumeric(String cadena) {
-      boolean resultado;
-
-      try {
-          Integer.parseInt(cadena);
-          resultado = true;
-      } catch (NumberFormatException excepcion) {
-          resultado = false;
-      }
-
-      return resultado;
   }
 
 
@@ -248,6 +412,7 @@ public class SearchFiles {
 
     String index = "index";
     String field = "contents";
+    String output = "";
     String queries = null;
     int repeat = 0;
     boolean raw = false;
@@ -260,7 +425,10 @@ public class SearchFiles {
       if ("-index".equals(args[i])) {
         index = args[i+1];
         i++;
-      } else if ("-field".equals(args[i])) {
+      } else if ("-output".equals(args[i])) {
+          output = args[i+1];
+      }
+      else if ("-field".equals(args[i])) {
         field = args[i+1];
         i++;
       } else if ("-queries".equals(args[i])) {
@@ -299,13 +467,13 @@ public class SearchFiles {
       System.exit(1);
     }
     
-    processingNeeds(needsDir);
+    processingNeeds(needsDir, index, field, output);
     
     IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
     IndexSearcher searcher = new IndexSearcher(reader);
-    Analyzer analyzer = new SpanishAnalyzer2();
+    Analyzer analyzer = new SpanishAnalyzer2(SpanishAnalyzer2.createStopSet3());
 
-    BufferedReader in = null;
+    /*BufferedReader in = null;
     if (queries != null) {
       in = new BufferedReader(new InputStreamReader(new FileInputStream(queries), "UTF-8"));
     } else {
@@ -328,7 +496,7 @@ public class SearchFiles {
         break;
       }
     	   	  
-	  /*Query query = parser.parse(line);
+	  Query query = parser.parse(line);
       System.out.println("Searching for: " + query.toString(field));
             
       if (repeat > 0) {                           // repeat & time as benchmark
@@ -338,7 +506,7 @@ public class SearchFiles {
         }
         Date end = new Date();
         System.out.println("Time: "+(end.getTime()-start.getTime())+"ms");
-      }*/
+      }
       
       String primeraConsulta = line.substring(0,line.indexOf(":"));
       
@@ -455,9 +623,11 @@ public class SearchFiles {
       if (queryString != null) {
         break;
       }
-    }
+    }*/
     reader.close();
   }
+  
+  
 
   /**
    * This demonstrates a typical paging search scenario, where the search engine presents 
@@ -469,97 +639,176 @@ public class SearchFiles {
    * is executed another time and all hits are collected.
    * 
    */
-  public static void doPagingSearch(BufferedReader in, IndexSearcher searcher, Query query, 
-                                     int hitsPerPage, boolean raw, boolean interactive) throws IOException {
+  public static void doPagingSearch(IndexSearcher searcher, Query query, String idNeed, BufferedWriter writer) throws IOException {
 	
     
-	// Collect enough docs to show 5 pages
-    TopDocs results = searcher.search(query, 5 * hitsPerPage);
+    TopDocs results = searcher.search(query, 17540);
     ScoreDoc[] hits = results.scoreDocs;
     
     int numTotalHits = (int)results.totalHits;
-    System.out.println(numTotalHits + " total matching documents");
+    System.out.println(numTotalHits + " total matching documents"); 
+    
+	  for (int i = 0; i < hits.length; i++) {
+	    
+	    Document doc = searcher.doc(hits[i].doc);
+	    
+	    String path = doc.get("path");
+	    if (path != null) {
+	    	writer.write(idNeed+"\t"+path.substring(path.indexOf("\\")+1));
+	    	writer.newLine();
+	      System.out.println(prueba+" "+idNeed+"\t"+path.substring(path.indexOf("\\")+1));
+	      prueba++;
+	      // explain the scoring function
+	      //System.out.println(searcher.explain(query, hits[i].doc));
+	    } else {
+	      System.out.println((i+1) + ". " + "No path for this document");
+	    }
+	              
+	  }
+  }
+  
+  public static Map<String, Integer> encuentraFechas(String text){
+	  Map<String, Integer> fechas= new HashMap<String, Integer>();
+	  Scanner buscar = new Scanner(text);
+	  
+	  while(buscar.hasNext()) {
+		  String s = buscar.next();
+		  
+		  if(s.equals("de") || s.equals("entre") || s.equals("desde") || s.equals("del")){
+  			//de/entre/desde/del X hasta/a/y/al Y
+			  if(buscar.hasNext()) s = buscar.next();
+			if(isNumeric(s)) {
+				int num1=Integer.parseInt(s);
+				if(buscar.hasNext()) s = buscar.next();
+				if(s.equals("hasta") || s.equals("a") || s.equals("y") || s.equals("al")){
+					if(buscar.hasNext()) s = buscar.next();
+					if(isNumeric(s)) {
+						int num2=Integer.parseInt(s);
+						fechas.put("intervalo", num1);
+						fechas.put("intervaloNext", num2);
+					}
+				}
+			}
+  		  }
+		  else if(s.equals("ultimos") || s.equals("anterior") || s.equals("anteriores")) {
+			  //ultimos X anos
+			  //anterior a X
+			  //anteriores a X
+			  if(buscar.hasNext()) s = buscar.next();
+			  if(isNumeric(s)) {
+				  int num1=Integer.parseInt(s);
+				  if(buscar.hasNext()) s=buscar.next();
+				  if(s.equals("anos")) {
+					  fechas.put("ultimos", num1);
+				  }
+			  }
+			  else if(s.equals("a")) {
+				  if(buscar.hasNext()) s = buscar.next();
+				  if(isNumeric(s)) {
+					int num1=Integer.parseInt(s);
+					fechas.put("anterior", num1);
+				  }
+			  }
+		  }
+		  else if(s.equals("a")) {
+			  //a partir de X
+			  if(buscar.hasNext()) {
+				  s=buscar.next();
+				  if(s.equals("partir")) {
+					  if(buscar.hasNext()) s=buscar.next();
+					  if(s.equals("de")) {
+						  if(buscar.hasNext()) s=buscar.next();
+						  if(isNumeric(s)) {
+							  int num1 = Integer.parseInt(s);
+							  fechas.put("posterior", num1);
+						  }
+					  }
+				  }
+			  }
+		  }
+	  }
+	  
+	  buscar.close();	  
+	  return fechas;
+  }
+  
+  public static String encuentraNombres(String cadena) throws FileNotFoundException, IOException{
+	  Scanner buscar = new Scanner(cadena);
+	  
+	  String resultado = "";
+	  String s = "";
+	  boolean entra;
+	  while(buscar.hasNext()) {
+		  entra= false;
+		  s=buscar.next();
+		  
+		  FileReader f = new FileReader("nombresMinusculas.txt");
+	      BufferedReader b = new BufferedReader(f);
+	      String nombre;
+	      while((nombre = b.readLine())!=null && !entra) {
+	    	  if(s.equals(nombre)) {
+	    		  resultado = resultado +" _nombre_ "+s;
+	    		  entra=true;
+	    	  }
+	      }
+	      
+	      if(!entra) {
+	    	  resultado = resultado + " "+ s;
+	      }
+	      b.close();
+	  }
+	  
+	  buscar.close();
+	  
+	  return resultado;
+  }
+  
+  public static String encuentraBachelorMaster(String cadena){
+	  Scanner buscar = new Scanner(cadena);
+	  
+	  String resultado = "";
+	  String s = "";
+	  while(buscar.hasNext()) {
+		  s=buscar.next();
+		  if(s.equals("master") || s.equals("TFM")) {
+			  resultado = resultado + " _master_" + s;
+		  }
+		  else if(s.equals("fin") && buscar.hasNext()) {
+			  s=buscar.next();
+			  if(s.equals("de") && buscar.hasNext()) {
+				  s=buscar.next();
+				  if(s.equals("grado")) {
+					  resultado = resultado + " _grado_";
+				  }
+				  else {
+					  resultado = resultado + " " + s;
+				  }
+			  }
+			  else {
+				  resultado = resultado + " " + s;
+			  }
+		  }
+		  else {
+			  resultado = resultado + " " + s;
+		  }
+		 
+	  }
+	  
+	  buscar.close();
+	  
+	  return resultado;
+  }
+  
+  public static boolean isNumeric(String cadena) {
+      boolean resultado;
 
-    int start = 0;
-    int end = Math.min(numTotalHits, hitsPerPage);
-        
-    while (true) {
-      if (end > hits.length) {
-        System.out.println("Only results 1 - " + hits.length +" of " + numTotalHits + " total matching documents collected.");
-        System.out.println("Collect more (y/n) ?");
-        String line = in.readLine();
-        if (line.length() == 0 || line.charAt(0) == 'n') {
-          break;
-        }
-
-        hits = searcher.search(query, numTotalHits).scoreDocs;
-      }
-      
-      end = Math.min(hits.length, start + hitsPerPage);
-      
-      for (int i = start; i < end; i++) {
-        if (raw) {                              // output raw format
-          System.out.println("doc="+hits[i].doc+" score="+hits[i].score);
-          continue;
-        }
-        
-        Document doc = searcher.doc(hits[i].doc);
-        
-        String path = doc.get("path");
-        String modified = doc.get("modified");
-        if (path != null) {
-          System.out.println((i+1) + ". " + path);
-          System.out.println("  "+modified);
-          // explain the scoring function
-          //System.out.println(searcher.explain(query, hits[i].doc));
-        } else {
-          System.out.println((i+1) + ". " + "No path for this document");
-        }
-                  
+      try {
+          Integer.parseInt(cadena);
+          resultado = true;
+      } catch (NumberFormatException excepcion) {
+          resultado = false;
       }
 
-      if (!interactive || end == 0) {
-        break;
-      }
-
-      if (numTotalHits >= end) {
-        boolean quit = false;
-        while (true) {
-          System.out.print("Press ");
-          if (start - hitsPerPage >= 0) {
-            System.out.print("(p)revious page, ");  
-          }
-          if (start + hitsPerPage < numTotalHits) {
-            System.out.print("(n)ext page, ");
-          }
-          System.out.println("(q)uit or enter number to jump to a page.");
-          
-          String line = in.readLine();
-          if (line.length() == 0 || line.charAt(0)=='q') {
-            quit = true;
-            break;
-          }
-          if (line.charAt(0) == 'p') {
-            start = Math.max(0, start - hitsPerPage);
-            break;
-          } else if (line.charAt(0) == 'n') {
-            if (start + hitsPerPage < numTotalHits) {
-              start+=hitsPerPage;
-            }
-            break;
-          } else {
-            int page = Integer.parseInt(line);
-            if ((page - 1) * hitsPerPage < numTotalHits) {
-              start = (page - 1) * hitsPerPage;
-              break;
-            } else {
-              System.out.println("No such page");
-            }
-          }
-        }
-        if (quit) break;
-        end = Math.min(numTotalHits, start + hitsPerPage);
-      }
-    }
+      return resultado;
   }
 }

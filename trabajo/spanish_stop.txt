@@ -354,3 +354,7 @@ tenida
 tenidos
 tenidas
 tened
+modelo
+buscar
+informacion
+documento
