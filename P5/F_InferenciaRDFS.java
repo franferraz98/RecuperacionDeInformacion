@@ -23,10 +23,13 @@ public class F_InferenciaRDFS {
 		// contruimos un modelo secillo de seres vivos y sus relaciones
 		Model rdfsExample = ModelFactory.createDefaultModel();
 		//Definimos una jerarquía de clases de seres vivos
+		//Recurso Animal (es una clase, subclase de Mamifero)
 		Resource animalClass = rdfsExample.createResource(NS+"Animal");
 		animalClass.addProperty(RDF.type, RDFS.Class);
+		//Recurso Mamifero 
 		Resource mamiferoClass = rdfsExample.createResource(NS+"Mamifero");
 		animalClass.addProperty(RDFS.subClassOf, mamiferoClass);
+		//Recurso Humano (subclase de Animal)
 		Resource humanoClass = rdfsExample.createResource(NS+"Humano");
 		humanoClass.addProperty(RDFS.subClassOf, animalClass);
 		
