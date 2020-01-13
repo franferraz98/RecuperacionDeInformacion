@@ -36,9 +36,9 @@ public class SemanticSearcher {
 	    
 	    /* Valores para pruebas */
 	    
-	    rdfPath = "../../modelo_equipo16.rdf"; // Fichero RDF donde se almacena el grafo de la coleccion
-		infoNeedsFile = "../../necesidadesSPARQL.txt"; // Fichero de las necesidades de información
-		resultsFile = "../../results.txt"; // Fichero donde se almacenan los resultados
+	    rdfPath = "coleccion.rdf"; // Fichero RDF donde se almacena el grafo de la coleccion
+		infoNeedsFile = "necesidadesSPARQL.txt"; // Fichero de las necesidades de información
+		resultsFile = "results.txt"; // Fichero donde se almacenan los resultados
 	    
 	    int outputLimit = 50;
 	    
@@ -71,6 +71,9 @@ public class SemanticSearcher {
 
 		/* Cargamos el fichero RDF de la coleccion */
 		Model model = FileManager.get().loadModel(rdfPath);
+		
+		/*Model model = ModelFactory.createDefaultModel() ;
+		model.read(rdfPath) ;*/
 		
 		/* Creamos un modelo de inferencia */
 		InfModel inf = ModelFactory.createRDFSModel(model);
