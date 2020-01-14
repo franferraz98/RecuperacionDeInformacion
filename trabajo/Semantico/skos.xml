@@ -7,16 +7,14 @@
     xmlns:dc="http://purl.org/dc/elements/1.1/">
 
     <skos:ConceptScheme rdf:about="http://www.trabajos.fake/skos">
-        <dc:title>Modelo terminológico</dc:title>
-        <dc:description>Modelo terminológico basado en el esquema SKOS</dc:description>
+        <dc:title>Modelo terminologico</dc:title>
+        <dc:description>Modelo terminologico basado en el esquema SKOS</dc:description>
     </skos:ConceptScheme>
 
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#medicina">
 		<skos:definition>Ciencia dedicada al estudio de la vida, la salud y las enfermedades del ser humano</skos:definition>
 		<skos:prefLabel xml:lang="es">medicina</skos:prefLabel>
-		<skos:altLabel xml:lang="en">medicine</skos:altLabel>
 		<skos:altLabel>patologia</skos:altLabel>
-		<skos:altLabel>medico</skos:altLabel>
 		<skos:altLabel>farmaco</skos:altLabel>
         <skos:altLabel>oftalmologia</skos:altLabel>
         <skos:altLabel>cirugia</skos:altLabel>
@@ -24,10 +22,9 @@
 	</skos:Concept>
 
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#enfermedad">
-		<skos:definition>Alteración más o menos grave de la salud</skos:definition>
+		<skos:definition>Alteracion mas o menos grave de la salud</skos:definition>
 		<skos:prefLabel xml:lang="es">enfermedad</skos:prefLabel>
-		<skos:altLabel xml:lang="en">illnes</skos:altLabel>
-		<skos:altLabel>patología</skos:altLabel>
+		<skos:altLabel>patologia</skos:altLabel>
 		<skos:altLabel>afeccion</skos:altLabel>
 		<skos:altLabel>trastorno</skos:altLabel>
         <skos:altLabel>dolencia</skos:altLabel>
@@ -36,17 +33,14 @@
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#ocular">
 		<skos:definition>De los ojos o relacionado con ellos</skos:definition>
 		<skos:prefLabel xml:lang="es">ocular</skos:prefLabel>
-		<skos:altLabel xml:lang="en">ocular</skos:altLabel>
-		<skos:altLabel>visual</skos:altLabel>
 		<skos:altLabel>oculares</skos:altLabel>
 		<skos:altLabel>oftalmico</skos:altLabel>
         <skos:altLabel>optico</skos:altLabel>
 	</skos:Concept>
 
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#evolucion">
-		<skos:definition>Dicho de una teoría o de una idea: Desarrollarse o transformarse</skos:definition>
+		<skos:definition>Dicho de una teoria o de una idea: Desarrollarse o transformarse</skos:definition>
 		<skos:prefLabel xml:lang="es">evolucion</skos:prefLabel>
-		<skos:altLabel xml:lang="en">evolution</skos:altLabel>
 		<skos:altLabel>transformacion</skos:altLabel>
 		<skos:altLabel>desarrollo</skos:altLabel>
 		<skos:altLabel>progreso</skos:altLabel>
@@ -55,107 +49,75 @@
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#corriente">
 		<skos:definition>Curso, movimiento o tendencia de los sentimientos o de las ideas</skos:definition>
 		<skos:prefLabel xml:lang="es">corriente</skos:prefLabel>
-		<skos:altLabel xml:lang="en">stream</skos:altLabel>
 		<skos:altLabel>flujo</skos:altLabel>
 	</skos:Concept>
 
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#ideologica">
-		<skos:definition>Perteneciente o relativo a la ideología</skos:definition>
+		<skos:definition>Perteneciente o relativo a la ideologia</skos:definition>
 		<skos:prefLabel xml:lang="es">ideologica</skos:prefLabel>
-		<skos:altLabel xml:lang="en">ideological</skos:altLabel>
 		<skos:altLabel>ideologia</skos:altLabel>
 		<skos:altLabel>doctrina</skos:altLabel>
-		<skos:altLabel>ideas</skos:altLabel>
-        <skos:altLabel>filosofia</skos:altLabel>
 	</skos:Concept>
 
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#siglo">
 		<skos:definition>Periodo de cien años</skos:definition>
 		<skos:prefLabel xml:lang="es">siglo</skos:prefLabel>
-		<skos:altLabel xml:lang="en">century</skos:altLabel>
 	</skos:Concept>
 
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#cine">
-		<skos:definition>Técnica, arte e industria de la cinematografía</skos:definition>
+		<skos:definition>Tecnica, arte e industria de la cinematografia</skos:definition>
 		<skos:prefLabel xml:lang="es">cine</skos:prefLabel>
-		<skos:altLabel xml:lang="en">cinema</skos:altLabel>
 		<skos:altLabel>pelicula</skos:altLabel>
         <skos:altLabel>cinematografia</skos:altLabel>
 	</skos:Concept>
 
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#desarrollo">
-		<skos:definition>Acción y efecto de desarrollar o desarrollarse</skos:definition>
+		<skos:definition>Accion y efecto de desarrollar o desarrollarse</skos:definition>
 		<skos:prefLabel xml:lang="es">desarrollo</skos:prefLabel>
-		<skos:altLabel xml:lang="en">development</skos:altLabel>
 		<skos:altLabel>progreso</skos:altLabel>
         <skos:altLabel>avance</skos:altLabel>
         <skos:altLabel>mejora</skos:altLabel>
 	</skos:Concept>
 
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#videojuego">
-		<skos:definition>Juego electrónico que se visualiza en una pantalla.</skos:definition>
+		<skos:definition>Juego electronico que se visualiza en una pantalla.</skos:definition>
 		<skos:prefLabel xml:lang="es">videojuego</skos:prefLabel>
-		<skos:altLabel xml:lang="en">videogame</skos:altLabel>
 		<skos:altLabel>juego</skos:altLabel>
 	</skos:Concept>
 
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#diseño">
-		<skos:definition>Concepción original de un objeto u obra destinados a la producción en serie</skos:definition>
+		<skos:definition>Concepcion original de un objeto u obra destinados a la produccion en serie</skos:definition>
 		<skos:prefLabel xml:lang="es">diseño</skos:prefLabel>
-		<skos:altLabel xml:lang="en">design</skos:altLabel>
-		<skos:altLabel>proyecto</skos:altLabel>
-        <skos:altLabel>plan</skos:altLabel>
-        <skos:altLabel>esquema</skos:altLabel>
 	</skos:Concept>
 
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#personaje">
 		<skos:definition>Seres reales o imaginarios que figuran en una obra</skos:definition>
 		<skos:prefLabel xml:lang="es">personaje</skos:prefLabel>
-		<skos:altLabel xml:lang="en">character</skos:altLabel>
-		<skos:altLabel>personajes</skos:altLabel>
-        <skos:altLabel>protagonista</skos:altLabel>
 	</skos:Concept>
 
-    <skos:Concept rdf:about="http://www.trabajos.fake/skos#tecnica">
-		<skos:definition>Conjunto de procedimientos y recursos de que se sirve 
-			una ciencia o un arte.</skos:definition>
-		<skos:prefLabel xml:lang="es">técnica</skos:prefLabel>
-		<skos:altLabel xml:lang="en">way</skos:altLabel>
-		<skos:altLabel>método</skos:altLabel>
-		<skos:altLabel>procedimiento</skos:altLabel>
-		<skos:altLabel>sistema</skos:altLabel>
-	</skos:Concept>
-
-	<skos:Concept rdf:about="http://www.trabajos.fake/skos#inteigencia">
-		<skos:definition>Disciplina científica que se ocupa de crear programas 
-			informáticos que ejecutan operaciones comparables a las que realiza
-			la mente humana, como el aprendizaje o el razonamiento lógico.</skos:definition>
+	<skos:Concept rdf:about="http://www.trabajos.fake/skos#inteligencia">
+		<skos:definition>Disciplina cientifica que se ocupa de crear programas 
+			informaticos que ejecutan operaciones comparables a las que realiza
+			la mente humana, como el aprendizaje o el razonamiento logico.</skos:definition>
 		<skos:prefLabel xml:lang="es">inteligencia</skos:prefLabel>
-		<skos:altLabel xml:lang="en">intelligence</skos:altLabel>
-		<skos:altLabel>conocimiento</skos:altLabel>
-		<skos:altLabel>razonamiento</skos:altLabel>
-		<skos:altLabel>intelecto</skos:altLabel>
 	</skos:Concept>
 
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#artificial">
 		<skos:definition>Creado por el ser humano</skos:definition>
 		<skos:prefLabel xml:lang="es">artifcial</skos:prefLabel>
-		<skos:altLabel xml:lang="en">artificial</skos:altLabel>
 		<skos:altLabel>simulado</skos:altLabel>
         <skos:altLabel>sintetico</skos:altLabel>
 	</skos:Concept>
 
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#contaminacion">
-		<skos:definition>Acción y efecto de contaminar</skos:definition>
+		<skos:definition>Accion y efecto de contaminar</skos:definition>
 		<skos:prefLabel xml:lang="es">contaminacion</skos:prefLabel>
-		<skos:altLabel xml:lang="en">pollution</skos:altLabel>
 		<skos:altLabel>polucion</skos:altLabel>
 	</skos:Concept>
 
     <skos:Concept rdf:about="http://www.trabajos.fake/skos#informatica">
-		<skos:definition>Tratamiento automático de la información por medio de computadoras</skos:definition>
+		<skos:definition>Tratamiento automatico de la informacion por medio de computadoras</skos:definition>
 		<skos:prefLabel xml:lang="es">informatica</skos:prefLabel>
-		<skos:altLabel xml:lang="en">computing</skos:altLabel>
 		<skos:altLabel>computacion</skos:altLabel>
         <skos:altLabel>ordenador</skos:altLabel>
 	</skos:Concept>
