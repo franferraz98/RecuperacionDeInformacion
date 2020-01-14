@@ -62,7 +62,7 @@
         <rdfs:comment> Propiedad que representa la fecha de publicación de un documento </rdfs:comment>
         <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
         <rdfs:domain rdf:resource="http://www.trabajos.fake/trabajos#Documento"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
     </rdf:Description>
 
     <rdf:Description rdf:about="http://www.trabajos.fake/trabajos#TFG">
