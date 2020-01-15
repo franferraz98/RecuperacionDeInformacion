@@ -21,6 +21,7 @@ import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Resource;
 
 public class SemanticSearcher {
@@ -94,7 +95,7 @@ public class SemanticSearcher {
 		    ResultSet results = qexec.execSelect();
 		    /* Comentar la siguiente linea para escribir en el fichero de salida */
 		    
-		    //ResultSetFormatter.out(System.out, results, query);
+		    ResultSetFormatter.out(System.out, results, query);
             for (int i=0; i<outputLimit && results.hasNext(); i++) {
                 QuerySolution qsol = results.nextSolution();
                 Resource x = qsol.getResource("doc");
