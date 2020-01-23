@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xml:base="http://www.trabajos.fake/trabajos#">
+
+    <rdfs:Class rdf:about="http://www.trabajos.fake/trabajos#Documento">
+        <rdfs:label xml:lang="es">Documento</rdfs:label>
+    </rdfs:Class>
+
+    <rdf:Description rdf:about="http://www.trabajos.fake/trabajos#creador">
+        <rdfs:comment> Propiedad que representa el creador de un documento </rdfs:comment>
+        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+        <rdfs:domain rdf:resource="http://www.trabajos.fake/trabajos#Documento"/>
+        <rdfs:range rdf:resource="http://www.trabajos.fake/trabajos#Persona"/>
+    </rdf:Description>
+
+    <rdf:Description rdf:about="http://www.trabajos.fake/trabajos#titulo">
+        <rdfs:comment> Propiedad que representa el titulo de un documento </rdfs:comment>
+        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+        <rdfs:domain rdf:resource="http://www.trabajos.fake/trabajos#Documento"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    </rdf:Description>
+
+    <rdf:Description rdf:about="http://www.trabajos.fake/trabajos#identificador">
+        <rdfs:comment> Propiedad que representa el identificador de un documento </rdfs:comment>
+        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+        <rdfs:domain rdf:resource="http://www.trabajos.fake/trabajos#Documento"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    </rdf:Description>
+
+    <rdf:Description rdf:about="http://www.trabajos.fake/trabajos#subject">
+        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+        <rdfs:comment> Propiedad que representa los temas de un documento </rdfs:comment>
+        <owl:propertyChainAxiom rdf:parseType="Collection">
+            <owl:ObjectProperty rdf:about="http://www.trabajos.fake/trabajos#subject"/>
+            <owl:ObjectProperty rdf:about="http://www.w3.org/2004/02/skos/core#broader"/>
+        </owl:propertyChainAxiom>
+        <rdfs:domain rdf:resource="http://www.trabajos.fake/trabajos#Documento"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+    </rdf:Description>
+
+    <rdf:Description rdf:about="http://www.trabajos.fake/trabajos#publisher">
+        <rdfs:comment> Propiedad que representa la entidad que ha publicado el documento </rdfs:comment>
+        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+        <rdfs:domain rdf:resource="http://www.trabajos.fake/trabajos#Documento"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    </rdf:Description>
+
+    <rdf:Description rdf:about="http://www.trabajos.fake/trabajos#descripcion">
+        <rdfs:comment> Propiedad que representa la descripción de un documento </rdfs:comment>
+        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+        <rdfs:domain rdf:resource="http://www.trabajos.fake/trabajos#Documento"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    </rdf:Description>
+
+    <rdf:Description rdf:about="http://www.trabajos.fake/trabajos#idioma">
+        <rdfs:comment> Propiedad que representa el idioma de un documento </rdfs:comment>
+        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+        <rdfs:domain rdf:resource="http://www.trabajos.fake/trabajos#Documento"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    </rdf:Description>
+
+    <rdf:Description rdf:about="http://www.trabajos.fake/trabajos#fecha">
+        <rdfs:comment> Propiedad que representa la fecha de publicación de un documento </rdfs:comment>
+        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+        <rdfs:domain rdf:resource="http://www.trabajos.fake/trabajos#Documento"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+    </rdf:Description>
+
+    <rdf:Description rdf:about="http://www.trabajos.fake/trabajos#TFG">
+        <rdfs:comment> Documento de tipo TFG </rdfs:comment>
+        <rdfs:subClassOf rdf:resource="http://www.trabajos.fake/trabajos#Documento"/>
+    </rdf:Description>
+
+    <rdf:Description rdf:about="http://www.trabajos.fake/trabajos#TFM">
+        <rdfs:comment> Documento de tipo TFM </rdfs:comment>
+        <rdfs:subClassOf rdf:resource="http://www.trabajos.fake/trabajos#Documento"/>
+    </rdf:Description>
+
+    <rdfs:Class rdf:about="http://www.trabajos.fake/trabajos#Persona">
+        <rdfs:label xml:lang="es">Persona</rdfs:label>
+    </rdfs:Class>
+
+    <rdf:Description rdf:about="http://www.trabajos.fake/trabajos#nombrePersona">
+        <rdfs:comment> Propiedad que representa el nombre de una persona </rdfs:comment>
+        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+        <rdfs:domain rdf:resource="http://www.trabajos.fake/trabajos#Persona"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    </rdf:Description>
+
+    <owl:ObjectProperty rdf:about="http://www.w3.org/2004/02/skos/core#broader">
+        <skos:scopeNote xml:lang="en">By convention, skos:broader is only used to assert an immediate (i.e. direct) hierarchical link between two conceptual resources.</skos:scopeNote>
+        <skos:definition xml:lang="en">Relates a concept to a concept that is more general in meaning.</skos:definition>
+        <rdfs:label xml:lang="en">has broader</rdfs:label>
+        <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+        <rdfs:comment xml:lang="en">Broader concepts are typically rendered as parents in a concept hierarchy (tree).</rdfs:comment>
+        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+    </owl:ObjectProperty>
+
+</rdf:RDF>

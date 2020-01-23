@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF 
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+	xmlns:owl="http://www.w3.org/2002/07/owl#"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xml:base="http://www.trabajos.fake/trabajos#">
+    
+	<owl:NamedIndividualScheme rdf:about="http://www.trabajos.fake/skos">
+		<dc:title>Modelo terminologico</dc:title>
+		<dc:description>Modelo terminologico basado en el esquema SKOS</dc:description>
+	</owl:NamedIndividualScheme>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#medicina">
+		<skos:definition>Ciencia dedicada al estudio de la vida, la salud y las enfermedades del ser humano</skos:definition>
+		<skos:prefLabel xml:lang="es">medicina</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#farmaco">
+		<skos:prefLabel xml:lang="es">farmaco</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#medicina"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#oftalmologia">
+		<skos:prefLabel xml:lang="es">oftalmologia</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#medicina"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#anatomia">
+		<skos:prefLabel xml:lang="es">anatomia</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#medicina"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#medicamento">
+		<skos:prefLabel xml:lang="es">medicamento</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#medicina"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#enfermedad">
+		<skos:definition>Alteracion mas o menos grave de la salud</skos:definition>
+		<skos:prefLabel xml:lang="es">enfermedad</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#patologia">
+		<skos:prefLabel xml:lang="es">patologia</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#medicina"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#enfermedad"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#afeccion">
+		<skos:prefLabel xml:lang="es">afeccion</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#enfermedad"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#trastorno">
+		<skos:prefLabel xml:lang="es">trastorno</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#enfermedad"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#dolencia">
+		<skos:prefLabel xml:lang="es">dolencia</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#enfermedad"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#ocular">
+		<skos:definition>De los ojos o relacionado con ellos</skos:definition>
+		<skos:prefLabel xml:lang="es">ocular</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#oculares">
+		<skos:prefLabel xml:lang="es">oculares</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#ocular"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#oftalmico">
+		<skos:prefLabel xml:lang="es">oftalmico</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#ocular"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#optico">
+		<skos:prefLabel xml:lang="es">optico</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#ocular"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#evolucion">
+		<skos:definition>Dicho de una teoria o de una idea: Desarrollarse o transformarse</skos:definition>
+		<skos:prefLabel xml:lang="es">evolucion</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#transformacion">
+		<skos:prefLabel xml:lang="es">transformacion</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#evolucion"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#corriente">
+		<skos:definition>Curso, movimiento o tendencia de los sentimientos o de las ideas</skos:definition>
+		<skos:prefLabel xml:lang="es">corriente</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#flujo">
+		<skos:prefLabel xml:lang="es">flujo</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#corriente"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#ideologica">
+		<skos:definition>Perteneciente o relativo a la ideologia</skos:definition>
+		<skos:prefLabel xml:lang="es">ideologica</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#ideologia">
+		<skos:prefLabel xml:lang="es">ideologia</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#ideologica"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#doctrina">
+		<skos:prefLabel xml:lang="es">doctrina</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#ideologica"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#siglo">
+		<skos:definition>Periodo de cien años</skos:definition>
+		<skos:prefLabel xml:lang="es">siglo</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#cinematografia">
+		<skos:definition>Tecnica, arte e industria del cine</skos:definition>
+		<skos:prefLabel xml:lang="es">cinematografia</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#cine">
+		<skos:prefLabel xml:lang="es">cine</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#cinematografia"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#pelicula">
+		<skos:prefLabel xml:lang="es">pelicula</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#cinematografia"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#desarrollo">
+		<skos:definition>Accion y efecto de desarrollar o desarrollarse</skos:definition>
+		<skos:prefLabel xml:lang="es">desarrollo</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#progreso">
+		<skos:prefLabel xml:lang="es">progreso</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#desarrollo"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#evolucion"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#avance">
+		<skos:prefLabel xml:lang="es">avance</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#desarrollo"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#mejora">
+		<skos:prefLabel xml:lang="es">mejora</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#desarrollo"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#videojuego">
+		<skos:definition>Juego electronico que se visualiza en una pantalla.</skos:definition>
+		<skos:prefLabel xml:lang="es">videojuego</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#diseño">
+		<skos:definition>Concepcion original de un objeto u obra destinados a la produccion en serie</skos:definition>
+		<skos:prefLabel xml:lang="es">diseño</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#personaje">
+		<skos:definition>Seres reales o imaginarios que figuran en una obra</skos:definition>
+		<skos:prefLabel xml:lang="es">personaje</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#inteligencia">
+		<skos:definition>Disciplina cientifica que se ocupa de crear programas informaticos que ejecutan operaciones comparables a las que realiza la mente humana, como el aprendizaje o el razonamiento logico.</skos:definition>
+		<skos:prefLabel xml:lang="es">inteligencia</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#artificial">
+		<skos:definition>Creado por el ser humano</skos:definition>
+		<skos:prefLabel xml:lang="es">artificial</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#simulado">
+		<skos:prefLabel xml:lang="es">simulado</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#artificial"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#sintetico">
+		<skos:prefLabel xml:lang="es">sintetico</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#artificial"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#contaminacion">
+		<skos:definition>Accion y efecto de contaminar</skos:definition>
+		<skos:prefLabel xml:lang="es">contaminacion</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#polucion">
+		<skos:prefLabel xml:lang="es">polucion</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#contaminacion"/>
+	</owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#informatica">
+		<skos:definition>Tratamiento automatico de la informacion por medio de computadoras</skos:definition>
+		<skos:prefLabel xml:lang="es">informatica</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#computacion">
+		<skos:prefLabel xml:lang="es">computacion</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#informatica"/>
+	</owl:NamedIndividual>
+
+	<owl:NamedIndividual rdf:about="http://www.trabajos.fake/skos#ordenador">
+		<skos:prefLabel xml:lang="es">ordenador</skos:prefLabel>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:broader rdf:resource="http://www.trabajos.fake/skos#informatica"/>
+	</owl:NamedIndividual>
+
+</rdf:RDF>
