@@ -1,31 +1,25 @@
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.jena.query.Dataset;
-import org.apache.jena.query.ReadWrite;
+import org.apache.jena.rdf.model.InfModel;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.tdb2.TDB2Factory;
+import org.apache.jena.util.FileManager;
 import org.apache.jena.vocabulary.RDF;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import openllet.jena.PelletReasonerFactory;
 
 public class SemanticGenerator {
 
@@ -72,20 +66,28 @@ public class SemanticGenerator {
 	    }
 	    
 	    try {
-	    	final FileOutputStream coleccionRDF = new FileOutputStream(new File(rdfPath));
+	    	final FileOutputStream escribirColeccionRDF = new FileOutputStream(new File(rdfPath));
 	    	
 	    	System.out.println("Creando colección RDF ...");
 	    	
 	    	Model skos = RDFDataMgr.loadModel(skosPath);
+	    	Model coleccionRDF = obtenerGrafoColeccion(skos, docDir);
+	    	coleccionRDF.add(skos);
 	    	
-	    	Model modelColeccionRDF = obtenerGrafoColeccion(skos, docDir);
-	    	modelColeccionRDF.write(coleccionRDF);
+	    	//Model model = FileManager.get().loadModel(owlPath);
+	    	//model.write(System.out,"TURTLE");
+	    	
+	    	//Model union = ModelFactory.createUnion(coleccionRDF, model);
+	    	
+	    	//InfModel inf = ModelFactory.createInfModel(PelletReasonerFactory.theInstance().create(), union);
+	    	//inf.write(System.out,"TURTLE");
+	    	coleccionRDF.write(escribirColeccionRDF);
 	    	
 	    	System.out.println("... Terminado");
 	    	
 	    } catch (IOException e) {
 	    	System.out.println("Encontrado error "+ e.getClass() + "con mensaje:\n"+ e.getMessage());
-	    }		
+	    }	
 	}
 	
 	public static Model obtenerGrafoColeccion(Model skos, File file) throws IOException{
@@ -132,6 +134,7 @@ public class SemanticGenerator {
 		String[] creador = null;
         String titulo=null, id=null, publisher=null, 
         	   descripcion=null, idioma=null, fecha=null, type=null;
+        //int fechaInt = 0;
         
         
         try {
@@ -184,7 +187,9 @@ public class SemanticGenerator {
 				dia = "01";
 			}
 			
-			fecha = anyo+"-"+mes+"-"+dia;
+			//fecha = anyo+"-"+mes+"-"+dia;
+			fecha = anyo+mes+dia;
+			//fechaInt = Integer.parseInt(fecha);
         	
         	//TFG o TFM
 			NodeList typeList = document.getElementsByTagName("dc:type");
@@ -206,7 +211,7 @@ public class SemanticGenerator {
         //Generar grafo rdf
         Model model = ModelFactory.createDefaultModel();
         
-        String uriDoc = "http://www.trabajos.fake/trabajos#Documento/"+id.substring(21);
+        String uriDoc = "http://www.trabajos.fake/trabajos/coleccion/"+id.substring(21);
         Resource doc = model.createResource(uriDoc)
         		.addProperty(RDF.type, trabajoPath + type)
         		.addProperty(model.createProperty(trabajoPath + "titulo"), titulo)
@@ -223,18 +228,20 @@ public class SemanticGenerator {
         
         //Añadir autores
         for(int i=0; i<creador.length; i++) {
-        	String uri = trabajoPath + "Persona/"+creador[i].replaceAll("[\\s,]", "");
+        	String uri = "http://www.trabajos.fake/trabajos/coleccion/"+creador[i].replaceAll("[\\s,]", "");
         	Resource persona = model.createResource(uri)
         			.addProperty(RDF.type, trabajoPath + "Persona")
+        			.addProperty(RDF.type, "http://www.w3.org/2002/07/owl#NamedIndividual")
         			.addProperty(model.createProperty(trabajoPath + "nombrePersona"), creador[i]);
         	
         	doc.addProperty(model.createProperty(trabajoPath + "creador"), persona);
         }
         
         //SKOS
-        ResIterator it = skos.listSubjectsWithProperty(model.createProperty(skosPath + "definition"));
+        ResIterator it = skos.listSubjectsWithProperty(model.createProperty(skosPath + "prefLabel"));
         String tituloSkos = limpia(titulo);
         String descripcionSkos = limpia(descripcion);
+        int i=0;
         while(it.hasNext()) {
         	Resource res = it.next();
         	Statement st = res.getProperty(model.createProperty(skosPath + "prefLabel"));
@@ -250,22 +257,6 @@ public class SemanticGenerator {
         	
         	if(tituloSkos.contains(subject) || descripcionSkos.contains(subject)) {
         		doc.addProperty(model.createProperty(trabajoPath + "subject"), res);
-        	}
-        	
-        	StmtIterator altLabels = res.listProperties(model.createProperty(skosPath + "altLabel"));
-    		while(altLabels.hasNext()) {
-        		Statement s = altLabels.nextStatement();
-        		subject = "";
-        		if(s.getObject().isLiteral()) {
-        			subject = s.getLiteral().toString();
-        		}
-        		else {
-        			subject = s.getResource().getURI();
-        		}
-        		
-        		if(tituloSkos.contains(subject) || descripcionSkos.contains(subject)) {
-            		doc.addProperty(model.createProperty(trabajoPath + "subject"), res);
-            	}
         	}
         }
         
